@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "LyraInventoryManagerComponent.h"
+#include "LyraShopManagerComponent.h"
 
 #include "Engine/ActorChannel.h"
 #include "Engine/World.h"
@@ -10,7 +10,7 @@
 #include "NativeGameplayTags.h"
 #include "Net/UnrealNetwork.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(LyraInventoryManagerComponent)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(LyraShopManagerComponent)
 
 class FLifetimeProperty;
 struct FReplicationFlags;
@@ -18,9 +18,9 @@ struct FReplicationFlags;
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Inventory_Message_StackChanged, "Lyra.Inventory.Message.StackChanged");
 
 //////////////////////////////////////////////////////////////////////
-// FLyraInventoryEntry
+// FLyraShopEntry
 
-FString FLyraInventoryEntry::GetDebugString() const
+FString FLyraShopEntry::GetDebugString() const
 {
 	TSubclassOf<ULyraInventoryItemDefinition> ItemDef;
 	if (Instance != nullptr)
@@ -32,42 +32,42 @@ FString FLyraInventoryEntry::GetDebugString() const
 }
 
 //////////////////////////////////////////////////////////////////////
-// FLyraInventoryList
+// FLyraShopList
 
-void FLyraInventoryList::PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize)
+void FLyraShopList::PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize)
 {
 	for (int32 Index : RemovedIndices)
 	{
-		FLyraInventoryEntry& Stack = Entries[Index];
+		FLyraShopEntry& Stack = Entries[Index];
 		BroadcastChangeMessage(Stack, /*OldCount=*/ Stack.StackCount, /*NewCount=*/ 0);
 		Stack.LastObservedCount = 0;
 	}
 }
 
-void FLyraInventoryList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize)
+void FLyraShopList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize)
 {
 	for (int32 Index : AddedIndices)
 	{
-		FLyraInventoryEntry& Stack = Entries[Index];
+		FLyraShopEntry& Stack = Entries[Index];
 		BroadcastChangeMessage(Stack, /*OldCount=*/ 0, /*NewCount=*/ Stack.StackCount);
 		Stack.LastObservedCount = Stack.StackCount;
 	}
 }
 
-void FLyraInventoryList::PostReplicatedChange(const TArrayView<int32> ChangedIndices, int32 FinalSize)
+void FLyraShopList::PostReplicatedChange(const TArrayView<int32> ChangedIndices, int32 FinalSize)
 {
 	for (int32 Index : ChangedIndices)
 	{
-		FLyraInventoryEntry& Stack = Entries[Index];
+		FLyraShopEntry& Stack = Entries[Index];
 		check(Stack.LastObservedCount != INDEX_NONE);
 		BroadcastChangeMessage(Stack, /*OldCount=*/ Stack.LastObservedCount, /*NewCount=*/ Stack.StackCount);
 		Stack.LastObservedCount = Stack.StackCount;
 	}
 }
 
-void FLyraInventoryList::BroadcastChangeMessage(FLyraInventoryEntry& Entry, int32 OldCount, int32 NewCount)
+void FLyraShopList::BroadcastChangeMessage(FLyraShopEntry& Entry, int32 OldCount, int32 NewCount)
 {
-	FLyraInventoryChangeMessage Message;
+	FLyraShopChangeMessage Message;
 	Message.InventoryOwner = OwnerComponent;
 	Message.Instance = Entry.Instance;
 	Message.NewCount = NewCount;
@@ -77,7 +77,7 @@ void FLyraInventoryList::BroadcastChangeMessage(FLyraInventoryEntry& Entry, int3
 	MessageSystem.BroadcastMessage(TAG_Lyra_Inventory_Message_StackChanged, Message);
 }
 
-ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
+ULyraInventoryItemInstance* FLyraShopList::AddEntry(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
 {
 	ULyraInventoryItemInstance* Result = nullptr;
 
@@ -88,7 +88,7 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 	check(OwningActor->HasAuthority());
 
 
-	FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
+	FLyraShopEntry& NewEntry = Entries.AddDefaulted_GetRef();
 	NewEntry.Instance = NewObject<ULyraInventoryItemInstance>(OwnerComponent->GetOwner());  //@TODO: Using the actor instead of component as the outer due to UE-127172
 	NewEntry.Instance->SetItemDef(ItemDef);
 	for (ULyraInventoryItemFragment* Fragment : GetDefault<ULyraInventoryItemDefinition>(ItemDef)->Fragments)
@@ -107,16 +107,16 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 	return Result;
 }
 
-void FLyraInventoryList::AddEntry(ULyraInventoryItemInstance* Instance)
+void FLyraShopList::AddEntry(ULyraInventoryItemInstance* Instance)
 {
 	unimplemented();
 }
 
-void FLyraInventoryList::RemoveEntry(ULyraInventoryItemInstance* Instance)
+void FLyraShopList::RemoveEntry(ULyraInventoryItemInstance* Instance)
 {
 	for (auto EntryIt = Entries.CreateIterator(); EntryIt; ++EntryIt)
 	{
-		FLyraInventoryEntry& Entry = *EntryIt;
+		FLyraShopEntry& Entry = *EntryIt;
 		if (Entry.Instance == Instance)
 		{
 			EntryIt.RemoveCurrent();
@@ -125,11 +125,11 @@ void FLyraInventoryList::RemoveEntry(ULyraInventoryItemInstance* Instance)
 	}
 }
 
-TArray<ULyraInventoryItemInstance*> FLyraInventoryList::GetAllItems() const
+TArray<ULyraInventoryItemInstance*> FLyraShopList::GetAllItems() const
 {
 	TArray<ULyraInventoryItemInstance*> Results;
 	Results.Reserve(Entries.Num());
-	for (const FLyraInventoryEntry& Entry : Entries)
+	for (const FLyraShopEntry& Entry : Entries)
 	{
 		if (Entry.Instance != nullptr) //@TODO: Would prefer to not deal with this here and hide it further?
 		{
@@ -140,45 +140,29 @@ TArray<ULyraInventoryItemInstance*> FLyraInventoryList::GetAllItems() const
 }
 
 //////////////////////////////////////////////////////////////////////
-// ULyraInventoryManagerComponent
+// ULyraShopManagerComponent
 
-ULyraInventoryManagerComponent::ULyraInventoryManagerComponent(const FObjectInitializer& ObjectInitializer)
+ULyraShopManagerComponent::ULyraShopManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
-	, InventoryList(this)
 	, ShopList(this)
 {
 	SetIsReplicatedByDefault(true);
 }
 
-void ULyraInventoryManagerComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+void ULyraShopManagerComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, InventoryList);
+	DOREPLIFETIME(ThisClass, ShopList);
 }
 
-bool ULyraInventoryManagerComponent::CanAddItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
+bool ULyraShopManagerComponent::CanAddItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
 {
 	//@TODO: Add support for stack limit / uniqueness checks / etc...
 	return true;
 }
 
-ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
-{
-	ULyraInventoryItemInstance* Result = nullptr;
-	if (ItemDef != nullptr)
-	{
-		Result = InventoryList.AddEntry(ItemDef, StackCount);
-		
-		if (IsUsingRegisteredSubObjectList() && IsReadyForReplication() && Result)
-		{
-			AddReplicatedSubObject(Result);
-		}
-	}
-	return Result;
-}
-
-ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddShopItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
+ULyraInventoryItemInstance* ULyraShopManagerComponent::AddItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
 {
 	ULyraInventoryItemInstance* Result = nullptr;
 	if (ItemDef != nullptr)
@@ -193,18 +177,19 @@ ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddShopItemDefinitio
 	return Result;
 }
 
-void ULyraInventoryManagerComponent::AddItemInstance(ULyraInventoryItemInstance* ItemInstance)
+
+void ULyraShopManagerComponent::AddItemInstance(ULyraInventoryItemInstance* ItemInstance)
 {
-	InventoryList.AddEntry(ItemInstance);
+	ShopList.AddEntry(ItemInstance);
 	if (IsUsingRegisteredSubObjectList() && IsReadyForReplication() && ItemInstance)
 	{
 		AddReplicatedSubObject(ItemInstance);
 	}
 }
 
-void ULyraInventoryManagerComponent::RemoveItemInstance(ULyraInventoryItemInstance* ItemInstance)
+void ULyraShopManagerComponent::RemoveItemInstance(ULyraInventoryItemInstance* ItemInstance)
 {
-	InventoryList.RemoveEntry(ItemInstance);
+	ShopList.RemoveEntry(ItemInstance);
 
 	if (ItemInstance && IsUsingRegisteredSubObjectList())
 	{
@@ -212,14 +197,14 @@ void ULyraInventoryManagerComponent::RemoveItemInstance(ULyraInventoryItemInstan
 	}
 }
 
-TArray<ULyraInventoryItemInstance*> ULyraInventoryManagerComponent::GetAllItems() const
+TArray<ULyraInventoryItemInstance*> ULyraShopManagerComponent::GetAllItems() const
 {
-	return InventoryList.GetAllItems();
+	return ShopList.GetAllItems();
 }
 
-ULyraInventoryItemInstance* ULyraInventoryManagerComponent::FindFirstItemStackByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const
+ULyraInventoryItemInstance* ULyraShopManagerComponent::FindFirstItemStackByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const
 {
-	for (const FLyraInventoryEntry& Entry : InventoryList.Entries)
+	for (const FLyraShopEntry& Entry : ShopList.Entries)
 	{
 		ULyraInventoryItemInstance* Instance = Entry.Instance;
 
@@ -235,10 +220,10 @@ ULyraInventoryItemInstance* ULyraInventoryManagerComponent::FindFirstItemStackBy
 	return nullptr;
 }
 
-int32 ULyraInventoryManagerComponent::GetTotalItemCountByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const
+int32 ULyraShopManagerComponent::GetTotalItemCountByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const
 {
 	int32 TotalCount = 0;
-	for (const FLyraInventoryEntry& Entry : InventoryList.Entries)
+	for (const FLyraShopEntry& Entry : ShopList.Entries)
 	{
 		ULyraInventoryItemInstance* Instance = Entry.Instance;
 
@@ -254,7 +239,7 @@ int32 ULyraInventoryManagerComponent::GetTotalItemCountByDefinition(TSubclassOf<
 	return TotalCount;
 }
 
-bool ULyraInventoryManagerComponent::ConsumeItemsByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 NumToConsume)
+bool ULyraShopManagerComponent::ConsumeItemsByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 NumToConsume)
 {
 	AActor* OwningActor = GetOwner();
 	if (!OwningActor || !OwningActor->HasAuthority())
@@ -266,9 +251,9 @@ bool ULyraInventoryManagerComponent::ConsumeItemsByDefinition(TSubclassOf<ULyraI
 	int32 TotalConsumed = 0;
 	while (TotalConsumed < NumToConsume)
 	{
-		if (ULyraInventoryItemInstance* Instance = ULyraInventoryManagerComponent::FindFirstItemStackByDefinition(ItemDef))
+		if (ULyraInventoryItemInstance* Instance = ULyraShopManagerComponent::FindFirstItemStackByDefinition(ItemDef))
 		{
-			InventoryList.RemoveEntry(Instance);
+			ShopList.RemoveEntry(Instance);
 			++TotalConsumed;
 		}
 		else
@@ -280,14 +265,14 @@ bool ULyraInventoryManagerComponent::ConsumeItemsByDefinition(TSubclassOf<ULyraI
 	return TotalConsumed == NumToConsume;
 }
 
-void ULyraInventoryManagerComponent::ReadyForReplication()
+void ULyraShopManagerComponent::ReadyForReplication()
 {
 	Super::ReadyForReplication();
 
 	// Register existing ULyraInventoryItemInstance
 	if (IsUsingRegisteredSubObjectList())
 	{
-		for (const FLyraInventoryEntry& Entry : InventoryList.Entries)
+		for (const FLyraShopEntry& Entry : ShopList.Entries)
 		{
 			ULyraInventoryItemInstance* Instance = Entry.Instance;
 
@@ -297,28 +282,15 @@ void ULyraInventoryManagerComponent::ReadyForReplication()
 			}
 		}
 
-		for (const FLyraInventoryEntry& Entry : ShopList.Entries)
-		{
-			ULyraInventoryItemInstance* Instance = Entry.Instance;
-
-			if (IsValid(Instance))
-			{
-				AddReplicatedSubObject(Instance);
-			}
-		}
 	}
 }
 
-TArray<ULyraInventoryItemInstance*> ULyraInventoryManagerComponent::GetShopInventory() const
- {
-	return ShopList.GetAllItems();
- }
 
-bool ULyraInventoryManagerComponent::ReplicateSubobjects(UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
+bool ULyraShopManagerComponent::ReplicateSubobjects(UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
 	bool WroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
 
-	for (FLyraInventoryEntry& Entry : InventoryList.Entries)
+	for (FLyraShopEntry& Entry : ShopList.Entries)
 	{
 		ULyraInventoryItemInstance* Instance = Entry.Instance;
 
@@ -328,15 +300,6 @@ bool ULyraInventoryManagerComponent::ReplicateSubobjects(UActorChannel* Channel,
 		}
 	}
 
-	for (FLyraInventoryEntry& Entry : ShopList.Entries)
-	{
-		ULyraInventoryItemInstance* Instance = Entry.Instance;
-
-		if (Instance && IsValid(Instance))
-		{
-			WroteSomething |= Channel->ReplicateSubobject(Instance, *Bunch, *RepFlags);
-		}
-	}
 	return WroteSomething;
 }
 

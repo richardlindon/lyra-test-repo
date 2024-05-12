@@ -69,6 +69,8 @@ private:
 
 	friend struct FLyraInventoryList;
 
+	friend struct FLyraShopList;
+
 private:
 	UPROPERTY(Replicated)
 	FGameplayTagStackContainer StatTags;

@@ -157,14 +157,7 @@ public:
 
 	int32 GetTotalItemCountByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const;
 	bool ConsumeItemsByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 NumToConsume);
-	
-	UFUNCTION(BlueprintCallable, Category="Inventory (Shop)", BlueprintPure=false)
-	TArray<ULyraInventoryItemInstance*> GetShopInventory() const;
-
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category="Inventory (Shop)")
-	ULyraInventoryItemInstance* AddShopItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount = 1);
-
-	
+		
 	//~UObject interface
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	virtual void ReadyForReplication() override;
@@ -174,7 +167,6 @@ private:
 	UPROPERTY(Replicated)
 	FLyraInventoryList InventoryList;
 	
-	FLyraInventoryList ShopList;
 };
 
 

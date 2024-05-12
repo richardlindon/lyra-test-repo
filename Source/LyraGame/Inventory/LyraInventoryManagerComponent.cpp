@@ -145,7 +145,6 @@ TArray<ULyraInventoryItemInstance*> FLyraInventoryList::GetAllItems() const
 ULyraInventoryManagerComponent::ULyraInventoryManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 	, InventoryList(this)
-	, ShopList(this)
 {
 	SetIsReplicatedByDefault(true);
 }
@@ -178,20 +177,6 @@ ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddItemDefinition(TS
 	return Result;
 }
 
-ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddShopItemDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
-{
-	ULyraInventoryItemInstance* Result = nullptr;
-	if (ItemDef != nullptr)
-	{
-		Result = ShopList.AddEntry(ItemDef, StackCount);
-		
-		if (IsUsingRegisteredSubObjectList() && IsReadyForReplication() && Result)
-		{
-			AddReplicatedSubObject(Result);
-		}
-	}
-	return Result;
-}
 
 void ULyraInventoryManagerComponent::AddItemInstance(ULyraInventoryItemInstance* ItemInstance)
 {
@@ -296,13 +281,10 @@ void ULyraInventoryManagerComponent::ReadyForReplication()
 				AddReplicatedSubObject(Instance);
 			}
 		}
+
 	}
 }
 
-TArray<ULyraInventoryItemInstance*> ULyraInventoryManagerComponent::GetShopInventory() const
- {
-	return ShopList.GetAllItems();
- }
 
 bool ULyraInventoryManagerComponent::ReplicateSubobjects(UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags)
 {
