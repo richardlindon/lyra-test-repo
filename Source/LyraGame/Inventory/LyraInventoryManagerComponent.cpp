@@ -109,7 +109,17 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 
 void FLyraInventoryList::AddEntry(ULyraInventoryItemInstance* Instance)
 {
-	unimplemented();
+	//Push new item definition, or add the instance directly to the Entries?
+
+	//new definition approach
+	//TSubclassOf<ULyraInventoryItemDefinition> ItemDef = Instance->GetItemDef();
+
+	//New instance approach
+	FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
+	NewEntry.Instance = Instance;
+
+	MarkItemDirty(NewEntry);
+
 }
 
 void FLyraInventoryList::RemoveEntry(ULyraInventoryItemInstance* Instance)

@@ -33,6 +33,11 @@ public:
 	UPROPERTY()
 	TObjectPtr<ULyraTeamDisplayAsset> DisplayAsset = nullptr;
 
+	/** @Game-Change start info about if the team is NPC only team **/
+	UPROPERTY()
+	bool IsNPCOnlyTeam = false;
+	/** @Game-Change end info about if the team is NPC only team **/
+
 	UPROPERTY()
 	FOnLyraTeamDisplayAssetChangedDelegate OnTeamDisplayAssetChanged;
 
@@ -85,6 +90,15 @@ public:
 	// Returns the associated player state for this actor, or INDEX_NONE if it is not associated with a player
 	const ALyraPlayerState* FindPlayerStateFromActor(const AActor* PossibleTeamActor) const;
 
+	/** @Game-Change start support for checking if actor is in a team that's an NPC team. **/
+	UFUNCTION(BlueprintCallable, Category=Teams)
+	bool IsPartOfAnNPCTeam(const UObject* ActorWithTeam) const;
+
+	// Gets if the team is NPC from the perspective of the specified team
+	UFUNCTION(BlueprintCallable, Category=Teams)
+	bool IsTeamNPC(int32 TeamId) const;
+	/** @Game-Change end support for checking if actor is in a team that's an NPC team. **/
+	
 	// Returns the team this object belongs to, or INDEX_NONE if it is not part of a team
 	UFUNCTION(BlueprintCallable, BlueprintPure=false, Category=Teams, meta=(Keywords="Get"))
 	void FindTeamFromActor(const UObject* TestActor, bool& bIsPartOfTeam, int32& TeamId) const;

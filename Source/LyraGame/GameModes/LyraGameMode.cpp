@@ -44,6 +44,18 @@ ALyraGameMode::ALyraGameMode(const FObjectInitializer& ObjectInitializer)
 
 const ULyraPawnData* ALyraGameMode::GetPawnDataForController(const AController* InController) const
 {
+
+	/** @Game-Change start use the pawn data info if that's been setup. Useful for not using the experience default pawn data and/or when there's no playerState **/
+	if (const ULyraPawnExtensionComponent* PawnExtComp = ULyraPawnExtensionComponent::FindPawnExtensionComponent(InController->GetPawn()))
+	{
+		if (const ULyraPawnData* PawnData = PawnExtComp->GetPawnData<ULyraPawnData>())
+		{
+			return PawnData;
+		}
+	}
+	/** @Game-Change end **/
+
+	
 	// See if pawn data is already set on the player state
 	if (InController != nullptr)
 	{

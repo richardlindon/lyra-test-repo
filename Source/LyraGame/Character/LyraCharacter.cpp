@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "LyraCharacter.h"
+#include "LyraPawnData.h" 
 
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "Camera/LyraCameraComponent.h"
@@ -224,6 +225,29 @@ void ALyraCharacter::PossessedBy(AController* NewController)
 
 	PawnExtComponent->HandleControllerChanged();
 
+	/** @Game-Change begin replacement for ALyraPlayerState::PostInitializeComponents() binding to OnExperience ready.
+		** Useful to ensure PawnExtension is ready with PawnData if pawn doesn't want to use default pawn data from the experience **/
+	if (ALyraPlayerState* LyraPlayerState = GetLyraPlayerState())
+	{
+		if (GetWorld()->GetNetMode() < NM_Client)
+		{
+			if (const ULyraPawnData* PawnData = PawnExtComponent->GetPawnData<ULyraPawnData>())
+			{
+				// check if we already have pawn data. This will be true in the case of PlayerControllers, their PlayerState persists
+				if (!LyraPlayerState->GetPawnData<ULyraPawnData>())
+				{
+					LyraPlayerState->SetPawnData(PawnData);
+				}
+			}
+			else
+			{
+				// setup waiting for the experience to be loaded so we can use the pawn data from the experience
+				LyraPlayerState->RegisterToExperienceLoadedToSetPawnData();
+			}
+		}
+	}
+	/** @Game-Change end **/
+	
 	// Grab the current team ID and listen for future changes
 	if (ILyraTeamAgentInterface* ControllerAsTeamProvider = Cast<ILyraTeamAgentInterface>(NewController))
 	{

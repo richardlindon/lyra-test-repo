@@ -15,7 +15,7 @@
 class FLifetimeProperty;
 struct FReplicationFlags;
 
-UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Inventory_Message_StackChanged, "Lyra.Inventory.Message.StackChanged");
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Inventory_Shop_Message_StackChanged, "Lyra.Inventory.Message.ShopStackChanged");
 
 //////////////////////////////////////////////////////////////////////
 // FLyraShopEntry
@@ -74,7 +74,7 @@ void FLyraShopList::BroadcastChangeMessage(FLyraShopEntry& Entry, int32 OldCount
 	Message.Delta = NewCount - OldCount;
 
 	UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(OwnerComponent->GetWorld());
-	MessageSystem.BroadcastMessage(TAG_Lyra_Inventory_Message_StackChanged, Message);
+	MessageSystem.BroadcastMessage(TAG_Lyra_Inventory_Shop_Message_StackChanged, Message);
 }
 
 ULyraInventoryItemInstance* FLyraShopList::AddEntry(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)

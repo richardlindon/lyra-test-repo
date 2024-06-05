@@ -23,7 +23,14 @@ public:
 
 	ULyraTeamDisplayAsset* GetTeamDisplayAsset() const { return TeamDisplayAsset; }
 
+	/** @Game-Change start added info for if this team is NPC only Team **/
+	bool GetIsNPCOnlyTeam() const { return IsNPCTeam; }
 private:
+	void SetIsNPCOnlyTeam(bool InitIsNPCTeam);
+
+	UPROPERTY()
+	bool IsNPCTeam = false;
+	
 	UFUNCTION()
 	void OnRep_TeamDisplayAsset();
 

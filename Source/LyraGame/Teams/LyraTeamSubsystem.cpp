@@ -34,6 +34,10 @@ void FLyraTeamTrackingInfo::SetTeamInfo(ALyraTeamInfoBase* Info)
 		{
 			OnTeamDisplayAssetChanged.Broadcast(DisplayAsset);
 		}
+
+		/** @Game-Change start update info on the team **/
+		IsNPCOnlyTeam = NewPublicInfo->GetIsNPCOnlyTeam();
+		/** @Game-Change end update info on the team **/
 	}
 	else if (ALyraTeamPrivateInfo* NewPrivateInfo = Cast<ALyraTeamPrivateInfo>(Info))
 	{
@@ -218,6 +222,25 @@ const ALyraPlayerState* ULyraTeamSubsystem::FindPlayerStateFromActor(const AActo
 
 	return nullptr;
 }
+
+/** @Game-Change start support for checking if actor is in a team that's an NPC team. **/
+bool ULyraTeamSubsystem::IsPartOfAnNPCTeam(const UObject* ActorWithTeam) const
+{
+	const int32 TeamID = FindTeamFromObject(Cast<const AActor>(ActorWithTeam));
+	return IsTeamNPC(TeamID);
+}
+
+bool ULyraTeamSubsystem::IsTeamNPC(const int32 TeamId) const
+{
+	if (const FLyraTeamTrackingInfo* Entry = TeamMap.Find(TeamId))
+	{
+		return Entry->IsNPCOnlyTeam;
+	}
+
+	return false;
+}
+/** @Game-Change end support for checking if actor is in a team that's an NPC team. **/
+
 
 ELyraTeamComparison ULyraTeamSubsystem::CompareTeams(const UObject* A, const UObject* B, int32& TeamIdA, int32& TeamIdB) const
 {

@@ -24,4 +24,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category=Lyra);
 	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
+	FSlateBrush Brush;
 };
