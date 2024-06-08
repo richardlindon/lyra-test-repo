@@ -90,12 +90,7 @@ APawn* ANPCSpawner::SpawnAIFromClass(UObject* WorldContextObject, ULyraPawnData*
 		ActorSpawnParams.bDeferConstruction = true;
 		
 		NewPawn = World->SpawnActor<APawn>(*LoadedPawnData->PawnClass, Location, Rotation, ActorSpawnParams);
-		//Testing using our npc start locations, this is temp code
-		
-		
-		
-		
-		
+
 		if (ControllerClassToSpawn)
 		{
 			NewPawn->AIControllerClass = ControllerClassToSpawn;
@@ -131,6 +126,8 @@ APawn* ANPCSpawner::SpawnAIFromClass(UObject* WorldContextObject, ULyraPawnData*
 			}
 		}
 
+		//Testing using our npc start locations, this is temp code
+		//I think this will be moved to a game director instead, and this npc spawner can stay as a debug tool
 		if (AGameStateBase* GameState = World->GetGameState())
 		{
 			if (UNPCSpawningManagerComponent* NPCSpawnManagerComponent = GameState->FindComponentByClass<UNPCSpawningManagerComponent>())
