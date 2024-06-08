@@ -1,11 +1,14 @@
 #include "NPC/NPCSpawner.h"
 #include "AbilitySystemGlobals.h"
 #include "AIController.h"
+#include "NPCSpawningManagerComponent.h"
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "Character/LyraPawnData.h"
 #include "Character/LyraPawnExtensionComponent.h"
 #include "GameFramework/PlayerState.h"
+#include "GameModes/LyraBotCreationComponent.h"
 #include "GameModes/LyraExperienceManagerComponent.h"
+#include "Player/LyraPlayerSpawningManagerComponent.h"
 #include "Teams/LyraTeamSubsystem.h"
 
 ANPCSpawner::ANPCSpawner()
@@ -53,6 +56,19 @@ void ANPCSpawner::ServerCreateNPCs()
 	}
 }
 
+// ULyraBotCreationComponent* ULyraBotCheats::GetBotComponent() const
+// {
+// 	if (UWorld* World = GetWorld())
+// 	{
+// 		if (AGameStateBase* GameState = World->GetGameState())
+// 		{
+// 			return GameState->FindComponentByClass<ULyraBotCreationComponent>();
+// 		}
+// 	}
+//
+// 	return nullptr;
+// }
+
 // similar to UAIBlueprintHelperLibrary::SpawnAIFromClass but we use the controller class defined here instead of the one set on the pawn
 // #todo could make a new static function in  UAIBlueprintHelperLibrary, like SpawnAIFromClassSpecifyController
 APawn* ANPCSpawner::SpawnAIFromClass(UObject* WorldContextObject, ULyraPawnData* LoadedPawnData, UBehaviorTree* BehaviorTreeToRun, FVector Location, FRotator Rotation, bool bNoCollisionFail, AActor *PawnOwner, TSubclassOf
@@ -70,9 +86,16 @@ APawn* ANPCSpawner::SpawnAIFromClass(UObject* WorldContextObject, ULyraPawnData*
 		ActorSpawnParams.ObjectFlags |= RF_Transient;	// We never want to save spawned AI pawns into a map
 		ActorSpawnParams.SpawnCollisionHandlingOverride = bNoCollisionFail ? ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn : ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 		// defer spawning the pawn to setup the AIController, else it spawns the default controller on spawn if set to spawn AI on spawn
-		ActorSpawnParams.bDeferConstruction = ControllerClassToSpawn != nullptr;
+		//ActorSpawnParams.bDeferConstruction = ControllerClassToSpawn != nullptr;
+		ActorSpawnParams.bDeferConstruction = true;
 		
 		NewPawn = World->SpawnActor<APawn>(*LoadedPawnData->PawnClass, Location, Rotation, ActorSpawnParams);
+		//Testing using our npc start locations, this is temp code
+		
+		
+		
+		
+		
 		if (ControllerClassToSpawn)
 		{
 			NewPawn->AIControllerClass = ControllerClassToSpawn;
@@ -80,7 +103,6 @@ APawn* ANPCSpawner::SpawnAIFromClass(UObject* WorldContextObject, ULyraPawnData*
 			{
 				PawnExtComp->SetPawnData(LoadedPawnData);
 			}
-			NewPawn->FinishSpawning(FTransform(Rotation, Location, GetActorScale3D()));
 		}
 		
 		if (NewPawn != NULL)
@@ -108,6 +130,25 @@ APawn* ANPCSpawner::SpawnAIFromClass(UObject* WorldContextObject, ULyraPawnData*
 				}
 			}
 		}
+
+		if (AGameStateBase* GameState = World->GetGameState())
+		{
+			if (UNPCSpawningManagerComponent* NPCSpawnManagerComponent = GameState->FindComponentByClass<UNPCSpawningManagerComponent>())
+			{
+				if (AController* PawnController = NewPawn->GetController())
+				{
+					if (AActor* SpawnLocationActor = NPCSpawnManagerComponent->ChooseNPCStart(PawnController))
+					{
+						// Override the location and rotation with the one provided by NPCSpawnManagerComponent
+						Location = SpawnLocationActor->GetActorLocation();
+						Rotation = SpawnLocationActor->GetActorRotation();
+					}
+				}
+			}
+		}
+
+		NewPawn->FinishSpawning(FTransform(Rotation, Location, GetActorScale3D()));
+
 	}
 
 	return NewPawn;
