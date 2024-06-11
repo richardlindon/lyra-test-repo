@@ -27,13 +27,13 @@ class LYRAGAME_API UNPCSpawningManagerComponent : public UGameStateComponent
 	GENERATED_BODY()
 public:
 	UNPCSpawningManagerComponent(const FObjectInitializer& ObjectInitializer);
-	AActor* ChooseNPCStart(AController* Player);
+	AActor* ChooseNPCStart(AController* Player, bool UnoccupiedOnly = false);
 	virtual void InitializeComponent() override;
 
 private:
 
 	void OnLevelAdded(ULevel* InLevel, UWorld* InWorld);
-	AActor* GetFirstRandomUnoccupiedNPCStart(AController* Player, TArray<ANPCPlayerStart*> Array);
+	AActor* GetFirstRandomUnoccupiedNPCStart(AController* Player, TArray<ANPCPlayerStart*> Array, bool UnoccupiedOnly = false);
 	UPROPERTY(Transient)
 	TArray<TWeakObjectPtr<ANPCPlayerStart>> CachedNPCStarts;
 };

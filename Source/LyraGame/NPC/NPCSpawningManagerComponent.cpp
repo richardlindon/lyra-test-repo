@@ -34,7 +34,7 @@ void UNPCSpawningManagerComponent::InitializeComponent()
 	}
 }
 
-AActor* UNPCSpawningManagerComponent::ChooseNPCStart(AController* Player)
+AActor* UNPCSpawningManagerComponent::ChooseNPCStart(AController* Player, bool UnoccupiedOnly  /* = false */)
 {
 
 	TArray<ANPCPlayerStart*> NPCStarterPoints;
@@ -53,7 +53,7 @@ AActor* UNPCSpawningManagerComponent::ChooseNPCStart(AController* Player)
 
 	// We could provide override for child classes as per example followed in LyraPlayerSpawningManagerComponent 
 	// AActor* NPCStart = OnChoosePlayerStart(Player, StarterPoints);
-	AActor* NPCStart = GetFirstRandomUnoccupiedNPCStart(Player, NPCStarterPoints);
+	AActor* NPCStart = GetFirstRandomUnoccupiedNPCStart(Player, NPCStarterPoints, UnoccupiedOnly);
 	
 	if (ANPCPlayerStart* LyraStart = Cast<ANPCPlayerStart>(NPCStart))
 	{
@@ -79,7 +79,7 @@ void UNPCSpawningManagerComponent::OnLevelAdded(ULevel* InLevel, UWorld* InWorld
 	}
 }
 
-AActor* UNPCSpawningManagerComponent::GetFirstRandomUnoccupiedNPCStart(AController* Controller, TArray<ANPCPlayerStart*> StartPoints)
+AActor* UNPCSpawningManagerComponent::GetFirstRandomUnoccupiedNPCStart(AController* Controller, TArray<ANPCPlayerStart*> StartPoints, bool UnoccupiedOnly  /* = false */)
 {
 	if (Controller)
 	{
@@ -106,7 +106,7 @@ AActor* UNPCSpawningManagerComponent::GetFirstRandomUnoccupiedNPCStart(AControll
 		{
 			return UnOccupiedStartPoints[FMath::RandRange(0, UnOccupiedStartPoints.Num() - 1)];
 		}
-		else if (OccupiedStartPoints.Num() > 0)
+		else if (OccupiedStartPoints.Num() > 0 && !UnoccupiedOnly)
 		{
 			return OccupiedStartPoints[FMath::RandRange(0, OccupiedStartPoints.Num() - 1)];
 		}
