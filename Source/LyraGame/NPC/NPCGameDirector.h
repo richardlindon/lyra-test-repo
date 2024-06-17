@@ -7,16 +7,21 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "Character/LyraPawnData.h"
 #include "Components/GameStateComponent.h"
-#include "GameModes/LyraExperienceDefinition.h"
 #include "NPCGameDirector.generated.h"
 
-// UENUM()
-// enum class EWavePhaseType : uint8
-// {
-// 	WaveActive = 0,
-//
-// 	WaveInactive
-// };
+UENUM()
+enum class EWavePhaseType : uint8
+{
+	WaveReset = 0,
+
+	WaveBegun,
+
+	WaveSpawningCompleted,
+	
+	WaveCompleted,
+
+	AllWavesCompleted
+};
 
 /** A message when a wave begins or ends */
 USTRUCT(BlueprintType)
@@ -24,10 +29,21 @@ struct FWaveChangeMessage
 {
 	GENERATED_BODY()
 
-	//Phase type enum? Needed? I think we can rely on game phase
+	UPROPERTY(BlueprintReadOnly)
+	EWavePhaseType WavePhase = EWavePhaseType::WaveBegun;
 	
-	UPROPERTY(BlueprintReadOnly, Category=Inventory)
+	UPROPERTY(BlueprintReadOnly, Category="Wave")
 	int32 WaveNumber = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Wave")
+	bool IsWaveActive = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Wave")
+	bool IsWavesCompleted = false;
+
+	UPROPERTY(BlueprintReadOnly, Category="Wave")
+	bool IsCurrentWaveSpawningCompleted = false;
+	
 };
 
 /**
@@ -76,17 +92,35 @@ public:
 	UBehaviorTree* BehaviorTree;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category="Game Director")
-	void BeginWave(int32 ThisWave, int32 NewEnemiesPerWave = -1, int32 NewMaxSpawnsPerSecond = -1);
+	void BeginWave(int32 NewWave = -1, int32 NewSpawnsPerWave = -1, int32 NewMaxSpawnsPerTick = -1);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category=Wave)
+	void ResetWaves();
 	// void OnExperienceLoaded(const ULyraExperienceDefinition* Experience);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Spawn, meta=(UIMin=1))
-	int32 NumNPCToCreate = 1;
+	UPROPERTY(BlueprintReadOnly, Category=Wave)
+	bool IsWaveActive = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Spawn)
+	UPROPERTY(BlueprintReadOnly, Category=Wave)
+	bool IsWavesCompleted = false;
+
+	UPROPERTY(BlueprintReadOnly, Category=Wave)
+	bool IsCurrentWaveSpawningCompleted = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Wave, meta=(UIMin=0))
+	int32 CurrentWave = 0;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Wave, meta=(UIMin=1))
+	int32 TotalWaves = 10;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Spawn, meta=(UIMin=1))
+	int32 SpawnsPerWave = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Spawn, meta=(UIMin=0))
 	float SpawnCheckTimerSeconds = 0.5f;
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Spawn)
@@ -104,6 +138,14 @@ protected:
 	TArray<TObjectPtr<APawn>> SpawnedNPCList;
 
 	virtual void ServerCreateNPCs();
+	void CheckSpawningCompleted();
+	void CheckWaveCompleted();
+	void FinishWaves();
+
+	void EndWave();
+	
+	void BroadcastWaveMessage() const;
+	
 	AActor* ChoosePawnStart(APawn* NewPawn);
 
 	void StartSpawningProcess(APawn* NewPawn);
