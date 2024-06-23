@@ -21,10 +21,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category=Lyra)
 	int EquippedSlot = 0;
-
+	
 	UPROPERTY(EditDefaultsOnly, Category=Lyra);
 	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
 
+	FActiveGameplayEffectHandle AppliedEffectHandle;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
 	FSlateBrush Brush;
 };

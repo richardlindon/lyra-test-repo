@@ -2,15 +2,21 @@
 
 #include "LyraInventoryManagerComponent.h"
 
+#include "AbilitySystemGlobals.h"
+#include "InventoryFragment_StatItem.h"
 #include "Engine/ActorChannel.h"
 #include "Engine/World.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "LyraInventoryItemDefinition.h"
 #include "LyraInventoryItemInstance.h"
 #include "NativeGameplayTags.h"
+#include "AbilitySystem/LyraAbilitySet.h"
+#include "AbilitySystem/LyraAbilitySystemComponent.h"
+#include "Character/LyraCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraInventoryManagerComponent)
+DEFINE_LOG_CATEGORY_STATIC(LogInventoryManager, Log, All);
 
 class FLifetimeProperty;
 struct FReplicationFlags;
@@ -77,6 +83,30 @@ void FLyraInventoryList::BroadcastChangeMessage(FLyraInventoryEntry& Entry, int3
 	MessageSystem.BroadcastMessage(TAG_Lyra_Inventory_Message_StackChanged, Message);
 }
 
+ULyraAbilitySystemComponent* FLyraInventoryList::GetAbilitySystemComponent() const
+{
+	check(OwnerComponent);
+	AActor* OwningActor = OwnerComponent->GetOwner();
+	if (ULyraAbilitySystemComponent* ASC = Cast<ULyraAbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwningActor)))
+	{
+		return ASC;
+	}
+		
+	// Attempt to cast the OwningActor to AController (or its derived class)
+	if (AController* Controller = Cast<AController>(OwningActor))
+	{
+		if (APawn* Pawn = Controller->GetPawn())
+		{
+			if (ALyraCharacter* Character = Cast<ALyraCharacter>(Pawn))
+			{
+				return Character->GetLyraAbilitySystemComponent();
+			}
+		}
+	}
+	
+	return nullptr;
+}
+
 ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 StackCount)
 {
 	ULyraInventoryItemInstance* Result = nullptr;
@@ -96,8 +126,48 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 		if (Fragment != nullptr)
 		{
 			Fragment->OnInstanceCreated(NewEntry.Instance);
+
+			//If Fragment is of class UInventoryFragment_StatItem, which is class LYRAGAME_API UInventoryFragment_StatItem : public ULyraInventoryItemFragment
+			//Access the
+
+			if (UInventoryFragment_StatItem* StatItemFragment = Cast<UInventoryFragment_StatItem>(Fragment))
+			{
+				UE_LOG(LogInventoryManager, Warning, TEXT("Found StatItem fragment"));
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(
+						-1,
+						5.0f, 
+						FColor::Green,
+						FString::Printf(TEXT("Found StatItem fragment"))
+					);
+				}
+				if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+				{
+					UE_LOG(LogInventoryManager, Warning, TEXT("Found ASC"));
+
+					if (StatItemFragment->GameplayEffect)
+					{
+						FString GameplayEffectName = StatItemFragment->GameplayEffect->GetName();
+						UE_LOG(LogInventoryManager, Warning, TEXT("Attempting to apply gameplay effect: %s"), *GameplayEffectName);
+
+						FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(StatItemFragment->GameplayEffect, 1, ASC->MakeEffectContext());
+						if (SpecHandle.IsValid())
+						{
+							StatItemFragment->AppliedEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+							UE_LOG(LogInventoryManager, Warning, TEXT("Successfully applied gameplay effect: %s. Effect Handle: %d"), *GameplayEffectName, StatItemFragment->AppliedEffectHandle);
+						}
+					}
+				}
+			}
 		}
 	}
+
+	// for (TObjectPtr<const ULyraAbilitySet> AbilitySet : EquipmentCDO->AbilitySetsToGrant)
+	// {
+	// 				
+	// 	AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &NewEntry.GrantedHandles, Result);
+	// }
 	NewEntry.StackCount = StackCount;
 	Result = NewEntry.Instance;
 
@@ -112,13 +182,13 @@ void FLyraInventoryList::AddEntry(ULyraInventoryItemInstance* Instance)
 	//Push new item definition, or add the instance directly to the Entries?
 
 	//new definition approach
-	//TSubclassOf<ULyraInventoryItemDefinition> ItemDef = Instance->GetItemDef();
-
+	TSubclassOf<ULyraInventoryItemDefinition> ItemDef = Instance->GetItemDef();
+	AddEntry(ItemDef, 1);
 	//New instance approach
-	FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
-	NewEntry.Instance = Instance;
+	// FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
+	// NewEntry.Instance = Instance;
 
-	MarkItemDirty(NewEntry);
+	// MarkItemDirty(NewEntry);
 
 }
 

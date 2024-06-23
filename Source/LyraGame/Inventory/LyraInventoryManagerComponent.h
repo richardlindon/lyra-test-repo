@@ -8,6 +8,7 @@
 #include "LyraInventoryManagerComponent.generated.h"
 
 class ULyraInventoryItemDefinition;
+class ULyraAbilitySystemComponent;
 class ULyraInventoryItemInstance;
 class ULyraInventoryManagerComponent;
 class UObject;
@@ -98,6 +99,7 @@ public:
 
 private:
 	void BroadcastChangeMessage(FLyraInventoryEntry& Entry, int32 OldCount, int32 NewCount);
+	ULyraAbilitySystemComponent* GetAbilitySystemComponent() const;
 
 private:
 	friend ULyraInventoryManagerComponent;
@@ -166,7 +168,7 @@ public:
 private:
 	UPROPERTY(Replicated)
 	FLyraInventoryList InventoryList;
-	
+		
 };
 
 
