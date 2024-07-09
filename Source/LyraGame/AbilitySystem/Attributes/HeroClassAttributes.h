@@ -29,6 +29,9 @@ public:
 	ATTRIBUTE_ACCESSORS(UHeroClassAttributes, Intelligence);
 	ATTRIBUTE_ACCESSORS(UHeroClassAttributes, Dexterity);
 
+	ATTRIBUTE_ACCESSORS(UHeroClassAttributes, MoveSpeed);
+
+	
 protected:
 
 	UFUNCTION()
@@ -40,14 +43,22 @@ protected:
 	UFUNCTION()
 	void OnRep_Dexterity(const FGameplayAttributeData& OldValue);
 
+	
+	UFUNCTION()
+	void OnRep_MoveSpeed(const FGameplayAttributeData& OldValue);
+
 private:
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Strength, Category = "Lyra|ClassStats", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Strength, Category = "Lyra|Attributes", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData Strength;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Intelligence, Category = "Lyra|ClassStats", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Intelligence, Category = "Lyra|Attributes", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData Intelligence;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Dexterity, Category = "Lyra|ClassStats", Meta = (AllowPrivateAccess = true))
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Dexterity, Category = "Lyra|Attributes", Meta = (AllowPrivateAccess = true))
 	FGameplayAttributeData Dexterity;
+
+	// The current max health attribute.  Max health is an attribute since gameplay effects can modify it.
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_MoveSpeed, Category = "Lyra|Attributes", Meta = (AllowPrivateAccess = true))
+	FGameplayAttributeData MoveSpeed;
 };

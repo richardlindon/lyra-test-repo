@@ -4,6 +4,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
+#include "LyraCharacter.h"
+#include "MovementSetComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
@@ -124,6 +126,14 @@ float ULyraCharacterMovementComponent::GetMaxSpeed() const
 		if (ASC->HasMatchingGameplayTag(TAG_Gameplay_MovementStopped))
 		{
 			return 0;
+		}
+	}
+
+	if (const ALyraCharacter* PlayerCharacter = Cast<ALyraCharacter>(GetOwner()))
+	{
+		if (UMovementSetComponent* MovementSetComponent = PlayerCharacter->MovementSetComponent)
+		{
+			return MovementSetComponent->GetMoveSpeed();
 		}
 	}
 

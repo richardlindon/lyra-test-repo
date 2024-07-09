@@ -22,6 +22,7 @@ class ULyraAbilitySystemComponent;
 class ULyraCameraComponent;
 class ULyraHealthComponent;
 class UManaComponent;
+class UMovementSetComponent;
 class ULyraPawnExtensionComponent;
 class UObject;
 struct FFrame;
@@ -146,6 +147,9 @@ public:
 	FSharedRepMovement LastSharedReplication;
 
 	virtual bool UpdateSharedReplication();
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UMovementSetComponent> MovementSetComponent;
 
 protected:
 
