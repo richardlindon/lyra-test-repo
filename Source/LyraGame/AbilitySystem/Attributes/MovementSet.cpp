@@ -12,7 +12,7 @@
 
 
 UMovementSet::UMovementSet()
-	: MoveSpeed(100.0f)
+	: MoveSpeed(600.0f)
 {
 }
 
@@ -28,7 +28,6 @@ void UMovementSet::OnRep_MoveSpeed(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UMovementSet, MoveSpeed, OldValue);
 }
-
 
 bool UMovementSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
 {

@@ -78,7 +78,7 @@ void FLyraInventoryList::BroadcastChangeMessage(FLyraInventoryEntry& Entry, int3
 	Message.Instance = Entry.Instance;
 	Message.NewCount = NewCount;
 	Message.Delta = NewCount - OldCount;
-
+	UE_LOG(LogInventoryManager, Warning, TEXT("Broadcasting change message"));
 	UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(OwnerComponent->GetWorld());
 	MessageSystem.BroadcastMessage(TAG_Lyra_Inventory_Message_StackChanged, Message);
 }
@@ -121,14 +121,12 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 	FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
 	NewEntry.Instance = NewObject<ULyraInventoryItemInstance>(OwnerComponent->GetOwner());  //@TODO: Using the actor instead of component as the outer due to UE-127172
 	NewEntry.Instance->SetItemDef(ItemDef);
+	
 	for (ULyraInventoryItemFragment* Fragment : GetDefault<ULyraInventoryItemDefinition>(ItemDef)->Fragments)
 	{
 		if (Fragment != nullptr)
 		{
 			Fragment->OnInstanceCreated(NewEntry.Instance);
-
-			//If Fragment is of class UInventoryFragment_StatItem, which is class LYRAGAME_API UInventoryFragment_StatItem : public ULyraInventoryItemFragment
-			//Access the
 
 			if (UInventoryFragment_StatItem* StatItemFragment = Cast<UInventoryFragment_StatItem>(Fragment))
 			{
@@ -142,22 +140,31 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 						FString::Printf(TEXT("Found StatItem fragment"))
 					);
 				}
+				
 				if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 				{
 					UE_LOG(LogInventoryManager, Warning, TEXT("Found ASC"));
 
-					if (StatItemFragment->GameplayEffect)
+					
+					for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
 					{
-						FString GameplayEffectName = StatItemFragment->GameplayEffect->GetName();
-						UE_LOG(LogInventoryManager, Warning, TEXT("Attempting to apply gameplay effect: %s"), *GameplayEffectName);
-
-						FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(StatItemFragment->GameplayEffect, 1, ASC->MakeEffectContext());
-						if (SpecHandle.IsValid())
-						{
-							StatItemFragment->AppliedEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-							UE_LOG(LogInventoryManager, Warning, TEXT("Successfully applied gameplay effect: %s. Effect Handle: %d"), *GameplayEffectName, StatItemFragment->AppliedEffectHandle);
-						}
+						AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &NewEntry.GrantedHandles, Result);
 					}
+					
+
+					
+					// if (StatItemFragment->GameplayEffect)
+					// {
+					// 	FString GameplayEffectName = StatItemFragment->GameplayEffect->GetName();
+					// 	UE_LOG(LogInventoryManager, Warning, TEXT("Attempting to apply gameplay effect: %s"), *GameplayEffectName);
+					//
+					// 	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(StatItemFragment->GameplayEffect, 1, ASC->MakeEffectContext());
+					// 	if (SpecHandle.IsValid())
+					// 	{
+					// 		NewEntry.Instance->AppliedEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+					// 		UE_LOG(LogInventoryManager, Warning, TEXT("Successfully applied gameplay effect: %s. Effect Handle: %d"), *GameplayEffectName, StatItemFragment->AppliedEffectHandle);
+					// 	}
+					// }
 				}
 			}
 		}
@@ -188,7 +195,7 @@ void FLyraInventoryList::AddEntry(ULyraInventoryItemInstance* Instance)
 	// FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
 	// NewEntry.Instance = Instance;
 
-	// MarkItemDirty(NewEntry);
+	//= MarkItemDirty(NewEntry);
 
 }
 
@@ -199,11 +206,33 @@ void FLyraInventoryList::RemoveEntry(ULyraInventoryItemInstance* Instance)
 		FLyraInventoryEntry& Entry = *EntryIt;
 		if (Entry.Instance == Instance)
 		{
+			if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+			{
+				Entry.GrantedHandles.TakeFromAbilitySystem(ASC);
+			}
+			
 			EntryIt.RemoveCurrent();
 			MarkArrayDirty();
 		}
 	}
 }
+
+//
+// void FLyraInventoryList::RemoveItemEffect(ULyraInventoryItemInstance* ItemInstance)
+// {
+// 	//FindFragmentByClass<UInventoryFragment_EquippableItem>()
+// 	
+// 	if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+// 	{
+// 		//ASC->RemoveActiveGameplayEffect(StatItemFragment->AppliedEffectHandle);
+// 		if (ItemInstance->AppliedEffectHandle.IsValid())
+// 		{
+// 			UE_LOG(LogTemp, Warning, TEXT("Valid effect handle found on item: %s"), *ItemInstance->GetName());
+// 			ASC->RemoveActiveGameplayEffect(ItemInstance->AppliedEffectHandle);
+// 			ItemInstance->AppliedEffectHandle.Invalidate();
+// 		}
+// 	}
+// }
 
 TArray<ULyraInventoryItemInstance*> FLyraInventoryList::GetAllItems() const
 {
@@ -269,6 +298,7 @@ void ULyraInventoryManagerComponent::AddItemInstance(ULyraInventoryItemInstance*
 
 void ULyraInventoryManagerComponent::RemoveItemInstance(ULyraInventoryItemInstance* ItemInstance)
 {
+	// InventoryList.RemoveItemEffect(ItemInstance);
 	InventoryList.RemoveEntry(ItemInstance);
 
 	if (ItemInstance && IsUsingRegisteredSubObjectList())
@@ -276,6 +306,7 @@ void ULyraInventoryManagerComponent::RemoveItemInstance(ULyraInventoryItemInstan
 		RemoveReplicatedSubObject(ItemInstance);
 	}
 }
+
 
 TArray<ULyraInventoryItemInstance*> ULyraInventoryManagerComponent::GetAllItems() const
 {

@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "LyraCharacter.h"
+#include "LyraLogChannels.h"
 #include "MovementSetComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"

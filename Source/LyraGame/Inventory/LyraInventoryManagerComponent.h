@@ -4,6 +4,7 @@
 
 #include "Components/ActorComponent.h"
 #include "Net/Serialization/FastArraySerializer.h"
+#include "AbilitySystem/LyraAbilitySet.h"
 
 #include "LyraInventoryManagerComponent.generated.h"
 
@@ -60,6 +61,10 @@ private:
 
 	UPROPERTY(NotReplicated)
 	int32 LastObservedCount = INDEX_NONE;
+	
+	// Authority-only list of granted handles
+	UPROPERTY(NotReplicated)
+	FLyraAbilitySet_GrantedHandles GrantedHandles;
 };
 
 /** List of inventory items */
@@ -96,6 +101,7 @@ public:
 	void AddEntry(ULyraInventoryItemInstance* Instance);
 
 	void RemoveEntry(ULyraInventoryItemInstance* Instance);
+	// void RemoveItemEffect(ULyraInventoryItemInstance* ItemInstance);
 
 private:
 	void BroadcastChangeMessage(FLyraInventoryEntry& Entry, int32 OldCount, int32 NewCount);

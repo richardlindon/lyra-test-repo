@@ -54,9 +54,9 @@ protected:
 
 	// Ability system used by this component.
 	UPROPERTY()
-	ULyraAbilitySystemComponent* AbilitySystemComponent;
+	TObjectPtr<ULyraAbilitySystemComponent> AbilitySystemComponent;
 
 	// Movement set used by this component.
 	UPROPERTY()
-	const UMovementSet* MovementSet;
+	TObjectPtr<const UMovementSet> MovementSet;
 };

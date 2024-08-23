@@ -6,6 +6,7 @@
 
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/MovementSet.h"
+#include "Net/UnrealNetwork.h"
 
 UMovementSetComponent::UMovementSetComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -17,6 +18,14 @@ UMovementSetComponent::UMovementSetComponent(const FObjectInitializer& ObjectIni
 	AbilitySystemComponent = nullptr;
 	MovementSet = nullptr;
 }
+
+// void UMovementSetComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+// {
+// 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//
+// 	DOREPLIFETIME(UMovementSetComponent, MovementSet);
+//
+// }
 
 void UMovementSetComponent::InitializeWithAbilitySystem(ULyraAbilitySystemComponent* InASC)
 {
@@ -55,7 +64,13 @@ void UMovementSetComponent::UninitializeFromAbilitySystem()
 
 float UMovementSetComponent::GetMoveSpeed() const
 {
-	return (MovementSet ? MovementSet->GetMoveSpeed() : 0.0f);
+	if (MovementSet)
+	{
+		return MovementSet->GetMoveSpeed(); 
+	}
+	
+	return 600.0f;
+	
 }
 
 void UMovementSetComponent::OnUnregister()

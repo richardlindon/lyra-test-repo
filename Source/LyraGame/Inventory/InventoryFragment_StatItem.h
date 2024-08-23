@@ -7,6 +7,8 @@
 #include "Inventory/LyraInventoryItemDefinition.h"
 #include "InventoryFragment_StatItem.generated.h"
 
+class ULyraAbilitySet;
+
 /**
  * 
  */
@@ -25,7 +27,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category=Lyra);
 	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
 
-	FActiveGameplayEffectHandle AppliedEffectHandle;
+	// Gameplay ability sets to grant when this is picked up
+    UPROPERTY(EditDefaultsOnly, Category=Lyra)
+    TArray<TObjectPtr<const ULyraAbilitySet>> AbilitySetsToGrant;
+
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
 	FSlateBrush Brush;
