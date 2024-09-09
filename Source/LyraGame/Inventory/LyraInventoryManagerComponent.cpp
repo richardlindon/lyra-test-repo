@@ -298,7 +298,6 @@ void ULyraInventoryManagerComponent::AddItemInstance(ULyraInventoryItemInstance*
 
 void ULyraInventoryManagerComponent::RemoveItemInstance(ULyraInventoryItemInstance* ItemInstance)
 {
-	// InventoryList.RemoveItemEffect(ItemInstance);
 	InventoryList.RemoveEntry(ItemInstance);
 
 	if (ItemInstance && IsUsingRegisteredSubObjectList())
