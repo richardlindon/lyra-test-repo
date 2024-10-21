@@ -23,8 +23,7 @@ UCurrencyManagerComponent::UCurrencyManagerComponent(const FObjectInitializer& O
 
 bool UCurrencyManagerComponent::CanAffordCost(int32 Cost)
 {
-	// @TODO: Build 
-	return true;
+	return Currency >= Cost;
 }
 
 void UCurrencyManagerComponent::RemoveCurrency(int32 Amount)

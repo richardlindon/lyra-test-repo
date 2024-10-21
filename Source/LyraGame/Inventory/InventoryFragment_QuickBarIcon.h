@@ -23,4 +23,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
 	FText DisplayNameWhenEquipped;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
+	FText TooltipName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
+	TArray<FText> TooltipEffectsList;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
+	FText TooltipDescription;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item")
+	int32 ItemCost;
 };

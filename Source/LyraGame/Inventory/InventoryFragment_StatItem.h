@@ -30,7 +30,6 @@ public:
 	// Gameplay ability sets to grant when this is picked up
     UPROPERTY(EditDefaultsOnly, Category=Lyra)
     TArray<TObjectPtr<const ULyraAbilitySet>> AbilitySetsToGrant;
-
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
 	FSlateBrush Brush;
