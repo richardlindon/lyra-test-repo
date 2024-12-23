@@ -2,6 +2,8 @@
 
 #include "LyraQuickBarComponent.h"
 
+#include "AbilitySystemGlobals.h"
+#include "LyraLogChannels.h"
 #include "Equipment/LyraEquipmentDefinition.h"
 #include "Equipment/LyraEquipmentInstance.h"
 #include "Equipment/LyraEquipmentManagerComponent.h"
@@ -9,6 +11,9 @@
 #include "GameFramework/Pawn.h"
 #include "Inventory/InventoryFragment_EquippableItem.h"
 #include "NativeGameplayTags.h"
+#include "AbilitySystem/LyraAbilitySystemComponent.h"
+#include "Character/LyraCharacter.h"
+#include "Inventory/InventoryFragment_StatItem.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraQuickBarComponent)
@@ -105,6 +110,59 @@ void ULyraQuickBarComponent::EquipItemInSlot()
 				}
 			}
 		}
+
+		if (const UInventoryFragment_StatItem* StatItemFragment = SlotItem->FindFragmentByClass<UInventoryFragment_StatItem>())
+		{
+			
+			
+			if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+			{
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(
+						-1,
+						5.0f, 
+						FColor::Green,
+						FString::Printf(TEXT("Found ASC, attempting to activate"))
+					);
+				}
+				TArray<FGameplayAbilitySpecHandle> AbilityHandles = SlotItem->GrantedHandles.GetAllAbilityHandles();
+				if (!AbilityHandles.IsEmpty())
+				{
+					ASC->TryActivateAbility(AbilityHandles[0]);
+				}
+				// for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
+				// {
+				// 	AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &Item->GrantedHandles, Item);
+				// }
+			}
+		}
+		
+		// Otherwise, activate the first granted ability
+		// if (UAbilitySystemComponent* AbilitySystem = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
+		// {
+		// 	if (const UInventoryFragment_AbilitySet* AbilityFragment = SlotItem->FindFragmentByClass<UInventoryFragment_AbilitySet>())
+		// 	{
+		// 		for (const FGameplayAbilitySpecHandle& Handle : AbilityFragment->GrantedAbilityHandles)
+		// 		{
+		// 			if (AbilitySystem->TryActivateAbility(Handle))
+		// 			{
+		// 				// Ability activated successfully
+		// 				return;
+		// 			}
+		// 		}
+		// 	}
+		// }
+		// else if (const UInventoryFragment_StatItem* StatInfo = SlotItem->FindFragmentByClass<UInventoryFragment_StatItem>())
+		// activate granted abilities
+		// {
+		// 	
+		// 	TArray<TObjectPtr<const ULyraAbilitySet>> AbilitySets = StatInfo->AbilitySetsToGrant;
+		// 	if (!AbilitySets.IsEmpty())
+		// 	{
+		// 		
+		// 	}
+		// }
 	}
 }
 
@@ -166,15 +224,71 @@ int32 ULyraQuickBarComponent::GetNextFreeItemSlot() const
 	return INDEX_NONE;
 }
 
+int32  ULyraQuickBarComponent::GetItemCurrentSlotIndex(const ULyraInventoryItemInstance* Item) const
+{
+	if (!Item)
+	{
+		return -1;
+	}
+
+	for (int32 Index = 0; Index < Slots.Num(); ++Index)
+	{
+		if (Slots[Index] == Item) 
+		{
+			return Index; 
+		}
+	}
+
+	return -1;
+}
+
 void ULyraQuickBarComponent::AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item)
 {
 	if (Slots.IsValidIndex(SlotIndex) && (Item != nullptr))
 	{
-		if (Slots[SlotIndex] == nullptr)
+		// Equipment manager originally prevent replacing slots.
+		// New intention is for inventory to contain any items in quickslots
+		// if (Slots[SlotIndex] == nullptr)
+		
+		int32 currentIndex = GetItemCurrentSlotIndex(Item);
+		if (currentIndex > -1)
 		{
-			Slots[SlotIndex] = Item;
-			OnRep_Slots();
+			if (ActiveSlotIndex == currentIndex)
+			{
+				UnequipItemInSlot();
+				ActiveSlotIndex = -1;
+			}
+
+			Slots[currentIndex] = nullptr;
+		} else
+		{
+			
+			if (const UInventoryFragment_StatItem* StatItemFragment = Item->FindFragmentByClass<UInventoryFragment_StatItem>())
+			{
+			
+				UE_LOG(LogLyra, Warning, TEXT("Found StatItem fragment in quickbar"));
+				if (GEngine)
+				{
+					GEngine->AddOnScreenDebugMessage(
+						-1,
+						5.0f, 
+						FColor::Green,
+						FString::Printf(TEXT("Found StatItem fragment in quickbar"))
+					);
+				}
+				if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+				{
+					UE_LOG(LogLyra, Warning, TEXT("Found ASC"));
+						
+					for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
+					{
+						AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &Item->GrantedHandles, Item);
+					}
+				}
+			}
 		}
+		Slots[SlotIndex] = Item;
+		OnRep_Slots();
 	}
 }
 
@@ -194,6 +308,10 @@ ULyraInventoryItemInstance* ULyraQuickBarComponent::RemoveItemFromSlot(int32 Slo
 
 		if (Result != nullptr)
 		{
+			if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+			{
+				Result->GrantedHandles.TakeFromAbilitySystem(ASC);
+			}
 			Slots[SlotIndex] = nullptr;
 			OnRep_Slots();
 		}
@@ -222,3 +340,29 @@ void ULyraQuickBarComponent::OnRep_ActiveSlotIndex()
 	MessageSystem.BroadcastMessage(TAG_Lyra_QuickBar_Message_ActiveIndexChanged, Message);
 }
 
+
+ULyraAbilitySystemComponent* ULyraQuickBarComponent::GetAbilitySystemComponent() const
+{
+	if (AActor* OwningActor = GetOwner())
+	{
+		if (ULyraAbilitySystemComponent* ASC = Cast<ULyraAbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwningActor)))
+		{
+			return ASC;
+		}
+		
+		// Attempt to cast the OwningActor to AController (or its derived class)
+		if (AController* Controller = Cast<AController>(OwningActor))
+		{
+			if (APawn* Pawn = Controller->GetPawn())
+			{
+				if (ALyraCharacter* Character = Cast<ALyraCharacter>(Pawn))
+				{
+					return Character->GetLyraAbilitySystemComponent();
+				}
+			}
+		}
+	}
+	
+		
+	return nullptr;
+}

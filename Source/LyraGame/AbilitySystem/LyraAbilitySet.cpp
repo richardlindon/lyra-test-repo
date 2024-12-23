@@ -65,6 +65,11 @@ void FLyraAbilitySet_GrantedHandles::TakeFromAbilitySystem(ULyraAbilitySystemCom
 	GrantedAttributeSets.Reset();
 }
 
+TArray<FGameplayAbilitySpecHandle> FLyraAbilitySet_GrantedHandles::GetAllAbilityHandles()
+{
+	return AbilitySpecHandles;
+}
+
 ULyraAbilitySet::ULyraAbilitySet(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {

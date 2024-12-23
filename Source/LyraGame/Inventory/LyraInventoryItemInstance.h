@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "AbilitySystem/LyraAbilitySet.h"
 #include "System/GameplayTagStack.h"
 #include "Templates/SubclassOf.h"
 
@@ -59,6 +60,10 @@ public:
 		return (ResultClass*)FindFragmentByClass(ResultClass::StaticClass());
 	}
 
+	//Used for quickbar ability system
+	FLyraAbilitySet_GrantedHandles GrantedHandles;
+
+	
 private:
 #if UE_WITH_IRIS
 	/** Register all replication fragments */
@@ -78,4 +83,5 @@ private:
 	// The item definition
 	UPROPERTY(Replicated)
 	TSubclassOf<ULyraInventoryItemDefinition> ItemDef;
+	
 };

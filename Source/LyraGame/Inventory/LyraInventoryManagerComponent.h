@@ -63,6 +63,7 @@ private:
 	int32 LastObservedCount = INDEX_NONE;
 	
 	// Authority-only list of granted handles
+	// TODO: Remove as we moving into the item instance instead
 	UPROPERTY(NotReplicated)
 	FLyraAbilitySet_GrantedHandles GrantedHandles;
 };

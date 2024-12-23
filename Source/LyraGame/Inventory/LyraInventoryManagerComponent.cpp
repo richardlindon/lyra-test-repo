@@ -128,57 +128,36 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 		{
 			Fragment->OnInstanceCreated(NewEntry.Instance);
 
-			if (UInventoryFragment_StatItem* StatItemFragment = Cast<UInventoryFragment_StatItem>(Fragment))
-			{
-				UE_LOG(LogInventoryManager, Warning, TEXT("Found StatItem fragment"));
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(
-						-1,
-						5.0f, 
-						FColor::Green,
-						FString::Printf(TEXT("Found StatItem fragment"))
-					);
-				}
-				
-				if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-				{
-					UE_LOG(LogInventoryManager, Warning, TEXT("Found ASC"));
-
-					
-					for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
-					{
-						AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &NewEntry.GrantedHandles, Result);
-					}
-					
-
-					
-					// if (StatItemFragment->GameplayEffect)
-					// {
-					// 	FString GameplayEffectName = StatItemFragment->GameplayEffect->GetName();
-					// 	UE_LOG(LogInventoryManager, Warning, TEXT("Attempting to apply gameplay effect: %s"), *GameplayEffectName);
-					//
-					// 	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(StatItemFragment->GameplayEffect, 1, ASC->MakeEffectContext());
-					// 	if (SpecHandle.IsValid())
-					// 	{
-					// 		NewEntry.Instance->AppliedEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-					// 		UE_LOG(LogInventoryManager, Warning, TEXT("Successfully applied gameplay effect: %s. Effect Handle: %d"), *GameplayEffectName, StatItemFragment->AppliedEffectHandle);
-					// 	}
-					// }
-				}
-			}
+			// if (UInventoryFragment_StatItem* StatItemFragment = Cast<UInventoryFragment_StatItem>(Fragment))
+			// {
+			// 	UE_LOG(LogInventoryManager, Warning, TEXT("Found StatItem fragment"));
+			// 	if (GEngine)
+			// 	{
+			// 		GEngine->AddOnScreenDebugMessage(
+			// 			-1,
+			// 			5.0f, 
+			// 			FColor::Green,
+			// 			FString::Printf(TEXT("Found StatItem fragment"))
+			// 		);
+			// 	}
+			// 	
+			// 	if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+			// 	{
+			// 		UE_LOG(LogInventoryManager, Warning, TEXT("Found ASC"));
+			//
+			// 		
+			// 		for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
+			// 		{
+			// 			AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &NewEntry.GrantedHandles, Result);
+			// 		}
+			// 	}
+			// }
 		}
 	}
 
-	// for (TObjectPtr<const ULyraAbilitySet> AbilitySet : EquipmentCDO->AbilitySetsToGrant)
-	// {
-	// 				
-	// 	AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &NewEntry.GrantedHandles, Result);
-	// }
 	NewEntry.StackCount = StackCount;
 	Result = NewEntry.Instance;
 
-	//const ULyraInventoryItemDefinition* ItemCDO = GetDefault<ULyraInventoryItemDefinition>(ItemDef);
 	MarkItemDirty(NewEntry);
 
 	return Result;
@@ -206,10 +185,10 @@ void FLyraInventoryList::RemoveEntry(ULyraInventoryItemInstance* Instance)
 		FLyraInventoryEntry& Entry = *EntryIt;
 		if (Entry.Instance == Instance)
 		{
-			if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-			{
-				Entry.GrantedHandles.TakeFromAbilitySystem(ASC);
-			}
+			// if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+			// {
+			// 	Entry.GrantedHandles.TakeFromAbilitySystem(ASC);
+			// }
 			
 			EntryIt.RemoveCurrent();
 			MarkArrayDirty();

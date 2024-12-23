@@ -12,7 +12,7 @@
 
 
 UMovementSet::UMovementSet()
-	: MoveSpeed(600.0f)
+	: MoveSpeed(400.0f)
 {
 }
 

@@ -99,6 +99,7 @@ public:
 
 	void TakeFromAbilitySystem(ULyraAbilitySystemComponent* LyraASC);
 
+	TArray<FGameplayAbilitySpecHandle> GetAllAbilityHandles();
 protected:
 
 	// Handles to the granted abilities.

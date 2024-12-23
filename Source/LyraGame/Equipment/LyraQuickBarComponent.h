@@ -45,6 +45,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure=false)
 	int32 GetNextFreeItemSlot() const;
 
+	UFUNCTION(BlueprintCallable)
+	int32 GetItemCurrentSlotIndex(const ULyraInventoryItemInstance* Item) const;
+
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	void AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item);
 
@@ -57,11 +60,12 @@ private:
 	void UnequipItemInSlot();
 	void EquipItemInSlot();
 
+	ULyraAbilitySystemComponent* GetAbilitySystemComponent() const;
 	ULyraEquipmentManagerComponent* FindEquipmentManager() const;
 
 protected:
 	UPROPERTY()
-	int32 NumSlots = 3;
+	int32 NumSlots = 6;
 
 	UFUNCTION()
 	void OnRep_Slots();
