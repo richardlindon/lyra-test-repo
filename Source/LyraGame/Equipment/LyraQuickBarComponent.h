@@ -49,6 +49,9 @@ public:
 	int32 GetItemCurrentSlotIndex(const ULyraInventoryItemInstance* Item) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+	void RemoveItemFromQuickbar(const ULyraInventoryItemInstance* Item);
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	void AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)

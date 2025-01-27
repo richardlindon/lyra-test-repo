@@ -242,6 +242,15 @@ int32  ULyraQuickBarComponent::GetItemCurrentSlotIndex(const ULyraInventoryItemI
 	return -1;
 }
 
+void ULyraQuickBarComponent::RemoveItemFromQuickbar(const ULyraInventoryItemInstance* Item)
+{
+	const int32 index = GetItemCurrentSlotIndex(Item);
+	if (index > -1)
+	{
+		RemoveItemFromSlot(index);
+	}
+}
+
 void ULyraQuickBarComponent::AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item)
 {
 	if (Slots.IsValidIndex(SlotIndex) && (Item != nullptr))
