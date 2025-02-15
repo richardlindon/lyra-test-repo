@@ -37,6 +37,15 @@ ALyraPlayerState::ALyraPlayerState(const FObjectInitializer& ObjectInitializer)
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
+	if (GetNetMode() != NM_DedicatedServer) // Only add progression component on clients
+	{
+		AController* Controller = GetOwner<AController>();
+		if (Controller && Controller->IsPlayerController()) 
+		{
+			PlayerProgressionComponent = CreateDefaultSubobject<UPlayerProgressionComponent>(TEXT("ProgressionComponent"));
+		}
+	}
+	
 	// These attribute sets will be detected by AbilitySystemComponent::InitializeComponent. Keeping a reference so that the sets don't get garbage collected before that.
 	HealthSet = CreateDefaultSubobject<ULyraHealthSet>(TEXT("HealthSet"));
 	ManaSet = CreateDefaultSubobject<UManaSet>(TEXT("ManaSet"));

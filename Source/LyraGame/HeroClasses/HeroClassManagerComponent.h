@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/LyraAbilitySet.h"
-#include "AbilitySystem/LyraAbilitySystemComponent.h"
+#include "HeroClassData.h"
 #include "Components/ActorComponent.h"
 #include "HeroClassManagerComponent.generated.h"
 
@@ -21,14 +20,29 @@ public:
 	UHeroClassManagerComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	// Function to swap to a new ability set
-	UFUNCTION(BlueprintCallable, Category = "Abilities")
-	void SwapAbilitySet(ULyraAbilitySet* NewAbilitySet, ULyraAbilitySystemComponent* ASC);
+	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
+	void SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC);
+	void GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex);
 
-	UFUNCTION(BlueprintCallable, Category = "Abilities")
+	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void RemoveAbilitySet(ULyraAbilitySystemComponent* ASC);
+
+	UPROPERTY(BlueprintReadOnly, Category = "Hero Classes")
+	TObjectPtr<UHeroClassData> CurrentHeroClass;
 	
 protected:
 
 	FLyraAbilitySet_GrantedHandles GrantedAbilitySetHandles;
 
+	FGameplayAbilitySpecHandle ClassAbilitySlot1Handles;
+
+	FGameplayAbilitySpecHandle ClassAbilitySlot2Handles;
+	
+private:
+
+	FGameplayTag ClassSpecial1Tag;
+
+	FGameplayTag ClassSpecial2Tag;
+
+	
 };

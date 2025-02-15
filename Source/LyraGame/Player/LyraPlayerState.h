@@ -4,6 +4,7 @@
 
 #include "AbilitySystemInterface.h"
 #include "ModularPlayerState.h"
+#include "Progression/PlayerProgressionComponent.h"
 #include "System/GameplayTagStack.h"
 #include "Teams/LyraTeamAgentInterface.h"
 
@@ -156,6 +157,9 @@ private:
 	// The ability system component sub-object used by player characters.
 	UPROPERTY(VisibleAnywhere, Category = "Lyra|PlayerState")
 	TObjectPtr<ULyraAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(VisibleAnywhere, Category = "Progression")
+	TObjectPtr<UPlayerProgressionComponent> PlayerProgressionComponent;
 
 	// Health attribute set used by this actor.
 	UPROPERTY()
