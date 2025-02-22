@@ -21,5 +21,5 @@ public:
 	TArray<TObjectPtr<UHeroClassData>> HeroClasses;
 
 	// Function to get all unique IDs from the hero classes
-	TArray<FString> GetAllHeroClassIDs(); 
+	TArray<FGameplayTag> GetAllHeroClassTags(); 
 };

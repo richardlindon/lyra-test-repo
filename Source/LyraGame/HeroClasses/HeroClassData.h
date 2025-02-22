@@ -48,7 +48,7 @@ public:
 	FString AbilityUniqueId;
 
 	UPROPERTY(EditDefaultsOnly)
-	FText AbilityDisplayName; 
+	FText AbilityDisplayName;
 
 };
 
@@ -64,7 +64,7 @@ public:
 	UHeroClassData(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hero Classes")
-	FString UniqueID = "";
+	FGameplayTag ClassTag;
 
 	// Grants the ability set to the specified ability system component.
 	// The returned handles can be used later to take away anything that was granted.
@@ -76,6 +76,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes", meta=(TitleProperty=Ability))
 	TArray<FHeroClassData_GameplayAbility> GrantedGameplayAbilities;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes")
+	FSlateBrush ClassIcon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes")
+	FText ClassDisplayName;
+
 protected:
 
 	// Gameplay effects to grant when this class is activated.
@@ -86,10 +92,5 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes", meta=(TitleProperty=AttributeSet))
 	TArray<FLyraAbilitySet_AttributeSet> GrantedAttributes;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes")
-	FSlateBrush ClassIcon;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes")
-	FText ClassDisplayName;
-
+	
 };

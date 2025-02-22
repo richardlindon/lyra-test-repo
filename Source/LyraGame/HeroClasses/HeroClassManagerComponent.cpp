@@ -13,10 +13,15 @@
 UHeroClassManagerComponent::UHeroClassManagerComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+}
+
+void UHeroClassManagerComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
 	ClassSpecial1Tag = FGameplayTag::RequestGameplayTag(FName(TEXT("InputTag.Ability.ClassSpecial1")));
 	ClassSpecial2Tag = FGameplayTag::RequestGameplayTag(FName(TEXT("InputTag.Ability.ClassSpecial2")));
 }
-
 
 /**
  * NEW APPROACH TODO:

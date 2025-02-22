@@ -3,9 +3,37 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "HeroClasses/HeroClassManagerComponent.h"
+#include "Net/Serialization/FastArraySerializer.h"
+#include "Components/PlayerStateComponent.h"
 #include "PlayerProgressionComponent.generated.h"
 
+/** A message when some class progression changes, like an XP gain */
+USTRUCT(BlueprintType)
+struct FHeroClassProgressionChangeMessage
+{
+	GENERATED_BODY()
+
+	//@TODO: Tag based names+owning actors for inventories instead of directly exposing the component?
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	TObjectPtr<UActorComponent> ProgressionOwner = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	TObjectPtr<AActor> Owner = nullptr;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	FGameplayTag ClassTag;
+
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	int32 NewLevel = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	int32 NewExperience = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	int32 OldExperience = 0;
+
+};
 
 USTRUCT(BlueprintType)
 struct FSkillChoice
@@ -22,48 +50,112 @@ struct FSkillChoice
 };
 
 USTRUCT(BlueprintType)
-struct FClassProgressionData
+struct FClassProgressionEntry : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
 
+	//This should match a unique class tag in HeroClassData
+	
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	FGameplayTag ClassTag;
+	
 	UPROPERTY(BlueprintReadWrite, Category="Progression")
 	int32 Level = 0;
 
 	UPROPERTY(BlueprintReadWrite, Category="Progression")
 	int32 Experience = 0;
 
-	UPROPERTY(BlueprintReadWrite, Category="Progression")
-	TArray<FSkillChoice>  SkillChoices;
+	// UPROPERTY(BlueprintReadWrite, Category="Progression")
+	// TArray<FSkillChoice>  SkillChoices;
 };
 
 USTRUCT(BlueprintType)
-struct FClassListProgressionData
+struct FClassProgressionDataList : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite, Category="Progression")
-	FClassProgressionData BruteClassSaveData;
+
+	FClassProgressionDataList()
+		: OwnerComponent(nullptr)
+	{
+	}
+
+	FClassProgressionDataList(UActorComponent* InOwnerComponent)
+		: OwnerComponent(InOwnerComponent)
+	{
+	}
+
+public:
+	//For update messages in UI
+	
+	// //~FFastArraySerializer contract
+	void PreReplicatedRemove(const TArrayView<int32> RemovedIndices, int32 FinalSize);
+	void PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize);
+	void PostReplicatedChange(const TArrayView<int32> ChangedIndices, int32 FinalSize);
+	// //~End of FFastArraySerializer contract
+
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo& DeltaParms)
+	{
+		return FFastArraySerializer::FastArrayDeltaSerialize<FClassProgressionEntry, FClassProgressionDataList>(Entries, DeltaParms, *this);
+	}
+
+	
+	void UpsertClassProgress(FGameplayTag ClassTag, int32 Level, int32 Experience);
+	FClassProgressionEntry* FindExistingByTag(FGameplayTag ClassTag);
+	// ULyraInventoryItemInstance* AddEntry(TSubclassOf<ULyraInventoryItemDefinition> ItemClass, int32 StackCount);
+	// void AddEntry(ULyraInventoryItemInstance* Instance);
+	//
+	// void RemoveEntry(ULyraInventoryItemInstance* Instance);
+
+private:
+	void BroadcastChangeMessage(FClassProgressionEntry& Entry) const;
+	UHeroClassManagerComponent* GetHeroClassManagerComponent() const;
+
+private:
+	friend UPlayerProgressionComponent;
+
+private:
+	// Replicated list of items
+	UPROPERTY()
+	TArray<FClassProgressionEntry> Entries;
+
+	UPROPERTY(NotReplicated)
+	TObjectPtr<UActorComponent> OwnerComponent;
 };
 
+template<>
+struct TStructOpsTypeTraits<FClassProgressionDataList> : public TStructOpsTypeTraitsBase2<FClassProgressionDataList>
+{
+	enum { WithNetDeltaSerializer = true };
+};
+
+
+
+
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LYRAGAME_API UPlayerProgressionComponent : public UActorComponent
+class LYRAGAME_API UPlayerProgressionComponent : public UPlayerStateComponent
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this component's properties
-	UPlayerProgressionComponent();
+	UPlayerProgressionComponent(const FObjectInitializer& ObjectInitializer); 
 
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	// Called every frame - set up autosave within?
+	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintPure, Category = "Lyra|Health")
+	static UPlayerProgressionComponent* FindProgressionComponent(const AController* Controller) { return (Controller ? Controller-> FindComponentByClass<UPlayerProgressionComponent>() : nullptr); }
+
+	UHeroClassManagerComponent* GetHeroManagerComponent() const;
 	// UFUNCTION(BlueprintCallable)
 	// void SaveGame();
 	//
 	// /** Adds XP to the given class, triggers level up if applicable */
-	// UFUNCTION(BlueprintCallable, Category="Progression")
-	// void AddXPToClass(FName ClassID, int32 Amount);
-	//
+	UFUNCTION(BlueprintCallable, Category="Progression")
+	void AddExperienceToClass(FGameplayTag ClassTag, int32 Amount);
+
 	// /** Gets the progression data for a specific class */
 	// UFUNCTION(BlueprintPure, Category="Progression")
 	// FClassProgressionData GetClassProgression(FName ClassID) const;
@@ -76,16 +168,28 @@ public:
 	// UFUNCTION(BlueprintCallable, Category="Progression")
 	// void SaveProgression();
 	
+	UFUNCTION(BlueprintPure, Category="Progression")
+	int32 GetExperienceRequired();
+
+	UFUNCTION(BlueprintPure, Category="Progression")
+	int32 GetCurrentExperience();
+
+	UFUNCTION(BlueprintPure, Category="Progression")
+	float GetExperienceNormalized();
+
+	FClassProgressionEntry* GetCurrentProgression();
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 private:
 
-	/** Class progression data mapped by class ID */
-	// UPROPERTY(BlueprintReadOnly, Category="Progression", meta=(AllowPrivateAccess="true"))
-	// TMap<FName, FClassProgressionData> ClassProgress;
-
+	UPROPERTY(Replicated)
+	FClassProgressionDataList ClassProgressionList;
+	
+	TObjectPtr<UHeroClassData> GetCurrentClass() const;
+	
+	
 	/** Whether auto-save is enabled */
 	// UPROPERTY(EditAnywhere, Category="Progression")
 	// bool bAutoSaveEnabled = true;
@@ -96,10 +200,6 @@ private:
 	//
 	// /** Timer handle for auto-save */
 	// FTimerHandle AutoSaveTimerHandle;
-	//
-	// /** Called when replicated class progression changes */
-	// UFUNCTION()
-	// void OnRep_ClassProgress();
 	//
 	// /** Marks progression as needing a save */
 	// bool bNeedsSave = false;

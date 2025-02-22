@@ -4,14 +4,14 @@
 #include "HeroClassListData.h"
 
 
-TArray<FString> UHeroClassListData::GetAllHeroClassIDs()
+TArray<FGameplayTag> UHeroClassListData::GetAllHeroClassTags()
 {
-	TArray<FString> IDs;
+	TArray<FGameplayTag> IDs;
 	for (const TObjectPtr<UHeroClassData> HeroClass : HeroClasses)
 	{
 		if (HeroClass)
 		{
-			IDs.Add(HeroClass->UniqueID);  
+			IDs.Add(HeroClass->ClassTag);  
 		}
 	}
 	return IDs;

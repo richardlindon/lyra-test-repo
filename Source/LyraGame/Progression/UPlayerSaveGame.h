@@ -20,6 +20,6 @@ class LYRAGAME_API UPlayerSaveGame : public USaveGame
 public:
 	// Map of class names to progression data
 	UPROPERTY()
-	TMap<FName, FClassProgressionData> ClassProgress;
+	TArray<FClassProgressionEntry> ClassProgress;
 
 };

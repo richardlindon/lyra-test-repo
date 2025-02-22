@@ -18,10 +18,13 @@ class LYRAGAME_API UHeroClassManagerComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UHeroClassManagerComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void BeginPlay() override;
 
 	// Function to swap to a new ability set
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC);
+
+	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
@@ -29,6 +32,12 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Hero Classes")
 	TObjectPtr<UHeroClassData> CurrentHeroClass;
+
+	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
+	FText GetCurrentHeroClassDisplayName() const
+	{
+		return CurrentHeroClass ? CurrentHeroClass->ClassDisplayName : FText::GetEmpty();
+	}
 	
 protected:
 
