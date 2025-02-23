@@ -8,6 +8,9 @@
 #include "LyraLogChannels.h"
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/LyraGameplayAbility.h"
+#include "GameFramework/GameplayMessageSubsystem.h"
+
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Class_Message_Changed, "Lyra.Class.Message.Changed");
 
 // Sets default values for this component's properties
 UHeroClassManagerComponent::UHeroClassManagerComponent(const FObjectInitializer& ObjectInitializer)
@@ -62,7 +65,15 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 		}
 		
 		//Determine which ability in a data set array to add to slot 2
+
+		FHeroClassChangeMessage Message;
+		Message.Owner = GetOwner();
+		Message.NewClassTag = NewHeroClass->ClassTag;
+		Message.ClassDisplayName = NewHeroClass->ClassDisplayName;
+		UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(this->GetWorld());
+		MessageSystem.BroadcastMessage(TAG_Lyra_Class_Message_Changed, Message);
 	}
+	
 }
 
 void UHeroClassManagerComponent::GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex = 0)

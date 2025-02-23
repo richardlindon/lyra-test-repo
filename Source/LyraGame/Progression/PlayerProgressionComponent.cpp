@@ -160,11 +160,30 @@ void UPlayerProgressionComponent::AddExperienceToClass(FGameplayTag ClassTag, in
 	int32 NewExperience = Amount;
 	int32 OldExperience = 0;
 	int32 Level = 0;
+	int32 OldLevel = 0;
+	
 	if (ExistingEntry)
 	{
-		OldExperience = ExistingEntry->Experience;
+		if (ExistingEntry->Level >= 5)
+		{
+			//Do nothing for max level
+			return;
+		}
 		NewExperience = ExistingEntry->Experience + Amount;
-		Level = ExistingEntry->Level;
+		OldExperience = ExistingEntry->Experience;
+		OldLevel = ExistingEntry->Level;
+
+		//Check if experience exceeds what is required for this level
+		int32 ExperienceRequired = GetExperienceRequired();
+		if (NewExperience > ExperienceRequired)
+		{
+			NewExperience = 0;
+			
+			Level = ExistingEntry->Level + 1;
+		} else
+		{
+			Level = ExistingEntry->Level;
+		}
 	}
 	ClassProgressionList.UpsertClassProgress(ClassTag, Level, NewExperience);
 	UE_LOG(LogLyra, Log, TEXT("New XP total: [%d]"), NewExperience);
@@ -176,9 +195,19 @@ void UPlayerProgressionComponent::AddExperienceToClass(FGameplayTag ClassTag, in
 	Message.NewExperience = NewExperience;
 	Message.OldExperience = OldExperience;
 	Message.NewLevel = Level;
+	Message.OldLevel = OldLevel;
 	// UE_LOG(LogProgression, Warning, TEXT("Broadcasting progression change message from AddExperienceToClass"));
 	UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(this->GetWorld());
 	MessageSystem.BroadcastMessage(TAG_Lyra_Progression_Message_Changed, Message);
+}
+
+int32 UPlayerProgressionComponent::GetCurrentLevel()
+{
+	if (FClassProgressionEntry* CurrentClassProgression = GetCurrentProgression())
+	{
+		return CurrentClassProgression->Level;
+	}
+	return 0;
 }
 
 
@@ -203,6 +232,7 @@ FClassProgressionEntry* UPlayerProgressionComponent::GetCurrentProgression()
 	}
 	return nullptr;
 }
+
 
 int32 UPlayerProgressionComponent::GetExperienceRequired()
 {

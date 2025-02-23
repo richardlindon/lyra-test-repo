@@ -7,6 +7,23 @@
 #include "Components/ActorComponent.h"
 #include "HeroClassManagerComponent.generated.h"
 
+
+/** A message when the active class changes */
+USTRUCT(BlueprintType)
+struct FHeroClassChangeMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category="Hero Classes")
+	TObjectPtr<AActor> Owner = nullptr;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Hero Classes")
+	FGameplayTag NewClassTag;
+
+	UPROPERTY(BlueprintReadOnly, Category="Hero Classes")
+	FText ClassDisplayName;
+};
+
 /**
  * @TODO: No idea if i need replication 
  */

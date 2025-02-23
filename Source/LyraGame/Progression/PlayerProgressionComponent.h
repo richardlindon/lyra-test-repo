@@ -14,7 +14,6 @@ struct FHeroClassProgressionChangeMessage
 {
 	GENERATED_BODY()
 
-	//@TODO: Tag based names+owning actors for inventories instead of directly exposing the component?
 	UPROPERTY(BlueprintReadOnly, Category="Progression")
 	TObjectPtr<UActorComponent> ProgressionOwner = nullptr;
 
@@ -24,6 +23,9 @@ struct FHeroClassProgressionChangeMessage
 	UPROPERTY(BlueprintReadOnly, Category="Progression")
 	FGameplayTag ClassTag;
 
+	UPROPERTY(BlueprintReadOnly, Category="Progression")
+	int32 OldLevel = 0;
+	
 	UPROPERTY(BlueprintReadOnly, Category="Progression")
 	int32 NewLevel = 0;
 
@@ -121,6 +123,9 @@ private:
 
 	UPROPERTY(NotReplicated)
 	TObjectPtr<UActorComponent> OwnerComponent;
+
+	/** Fixed max level of any class */
+	int32 MaxLevel = 5;
 };
 
 template<>
@@ -167,6 +172,9 @@ public:
 	// /** Saves current progression data */
 	// UFUNCTION(BlueprintCallable, Category="Progression")
 	// void SaveProgression();
+
+	UFUNCTION(BlueprintPure, Category="Progression")
+	int32 GetCurrentLevel();
 	
 	UFUNCTION(BlueprintPure, Category="Progression")
 	int32 GetExperienceRequired();
