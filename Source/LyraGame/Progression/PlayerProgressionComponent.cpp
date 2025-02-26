@@ -7,7 +7,9 @@
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "NativeGameplayTags.h"
+#include "UPlayerSaveGame.h"
 #include "GameFramework/Character.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/LyraPlayerController.h"
 #include "Player/LyraPlayerState.h"
 
@@ -128,8 +130,15 @@ void UPlayerProgressionComponent::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(LogLyra, Log, TEXT("UPlayerProgressionComponent was loaded."));
-	// ...
-	
+	if (APlayerState* PS = Cast<APlayerState>(GetOwner()))
+	{
+		if (AController* PC =  PS->GetOwningController())
+		{
+			if (PC->IsLocalPlayerController()) {
+				LoadProgression();
+			}
+		}
+	}
 }
 
 UHeroClassManagerComponent* UPlayerProgressionComponent::GetHeroManagerComponent() const
@@ -199,7 +208,10 @@ void UPlayerProgressionComponent::AddExperienceToClass(FGameplayTag ClassTag, in
 	// UE_LOG(LogProgression, Warning, TEXT("Broadcasting progression change message from AddExperienceToClass"));
 	UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(this->GetWorld());
 	MessageSystem.BroadcastMessage(TAG_Lyra_Progression_Message_Changed, Message);
+
+	SaveProgression();
 }
+
 
 int32 UPlayerProgressionComponent::GetCurrentLevel()
 {
@@ -263,4 +275,67 @@ float UPlayerProgressionComponent::GetExperienceNormalized()
 	}
 
 	return 0.0f;
+}
+
+TArray<FClassProgressionSaveEntry> UPlayerProgressionComponent::ConvertToSaveEntries()
+{
+    TArray<FClassProgressionSaveEntry> SaveEntries;
+    for (const FClassProgressionEntry& Entry : ClassProgressionList.Entries)
+    {
+    	FClassProgressionSaveEntry SaveEntry;
+    	SaveEntry.ClassTag = Entry.ClassTag;
+    	SaveEntry.Level = Entry.Level;
+    	SaveEntry.Experience = Entry.Experience;
+        SaveEntries.Add(SaveEntry);
+    }
+    return SaveEntries;
+}
+
+void UPlayerProgressionComponent::ServerSyncProgression_Implementation(const TArray<FClassProgressionSaveEntry>& SavedEntries)
+{
+    if (GetOwnerRole() == ROLE_Authority)
+    {
+        for (const FClassProgressionSaveEntry& Entry : SavedEntries)
+        {
+            ClassProgressionList.UpsertClassProgress(Entry.ClassTag, Entry.Level, Entry.Experience);
+        }
+    }
+}
+
+
+void UPlayerProgressionComponent::LoadProgression()
+{
+	//Load progression and attempt to sync it to progression component
+
+	if (UPlayerSaveGame* LoadedSave = Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromSlot("PlayerSaveSlot", 0)))
+	{
+		if (GetOwnerRole() == ROLE_Authority)
+		{
+			for (const FClassProgressionSaveEntry& Entry : LoadedSave->SavedProgression)
+			{
+				ClassProgressionList.UpsertClassProgress(Entry.ClassTag, Entry.Level, Entry.Experience);
+			}
+		} else
+		{
+			ServerSyncProgression(LoadedSave->SavedProgression);
+		}
+	}
+}
+
+
+void UPlayerProgressionComponent::SaveProgression()
+{
+	// Create or load an existing save game object
+	UPlayerSaveGame* SaveGameInstance = Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromSlot("PlayerSaveSlot", 0));
+
+	if (!SaveGameInstance)
+	{
+		SaveGameInstance = NewObject<UPlayerSaveGame>();
+	}
+
+	// Convert and store the progression data
+	SaveGameInstance->SavedProgression = ConvertToSaveEntries();
+
+	// Save to disk
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, "PlayerSaveSlot", 0);
 }

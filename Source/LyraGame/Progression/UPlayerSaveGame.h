@@ -3,11 +3,28 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerProgressionComponent.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/SaveGame.h"
 #include "UPlayerSaveGame.generated.h"
 
 
+struct FClassProgressionEntry;
+
+USTRUCT(BlueprintType)
+struct FClassProgressionSaveEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	FGameplayTag ClassTag;
+
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	int32 Level = 0;
+
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	int32 Experience = 0;
+
+};
 
 /**
  * 
@@ -18,8 +35,11 @@ class LYRAGAME_API UPlayerSaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-	// Map of class names to progression data
-	UPROPERTY()
-	TArray<FClassProgressionEntry> ClassProgress;
+	// The unique save slot name
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="SaveGame")
+	FString SaveSlotName = TEXT("PlayerClassesSaveSlot");
+	
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	TArray<FClassProgressionSaveEntry> SavedProgression;
 
 };

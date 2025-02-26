@@ -165,14 +165,7 @@ public:
 	// UFUNCTION(BlueprintPure, Category="Progression")
 	// FClassProgressionData GetClassProgression(FName ClassID) const;
 	//
-	// /** Loads progression data from a saved game */
-	// UFUNCTION(BlueprintCallable, Category="Progression")
-	// void LoadProgression(UPlayerSaveGame* LoadedSave);
-	//
-	// /** Saves current progression data */
-	// UFUNCTION(BlueprintCallable, Category="Progression")
-	// void SaveProgression();
-
+	
 	UFUNCTION(BlueprintPure, Category="Progression")
 	int32 GetCurrentLevel();
 	
@@ -185,7 +178,24 @@ public:
 	UFUNCTION(BlueprintPure, Category="Progression")
 	float GetExperienceNormalized();
 
+	UFUNCTION(BlueprintCallable, Category="Progression")
+	TArray<FClassProgressionSaveEntry> ConvertToSaveEntries();
+
+	TArray<FClassProgressionEntry> ConvertToProgressionEntries(TArray<FClassProgressionSaveEntry>& SaveEntries);
+
 	FClassProgressionEntry* GetCurrentProgression();
+
+	UFUNCTION(Server, Reliable)
+	void ServerSyncProgression(const TArray<FClassProgressionSaveEntry>& ProgressionData);
+
+	// /** Loads progression data from a saved game */
+	UFUNCTION(BlueprintCallable, Category="Progression")
+	void LoadProgression();
+	//
+	// /** Saves current progression data */
+	UFUNCTION(BlueprintCallable, Category="Progression")
+	void SaveProgression();
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -198,24 +208,19 @@ private:
 	TObjectPtr<UHeroClassData> GetCurrentClass() const;
 	
 	
-	/** Whether auto-save is enabled */
-	// UPROPERTY(EditAnywhere, Category="Progression")
-	// bool bAutoSaveEnabled = true;
-	//
-	// /** Interval for auto-saving in seconds */
-	// UPROPERTY(EditAnywhere, Category="Progression")
-	// float AutoSaveInterval = 60.0f;
-	//
-	// /** Timer handle for auto-save */
-	// FTimerHandle AutoSaveTimerHandle;
-	//
-	// /** Marks progression as needing a save */
-	// bool bNeedsSave = false;
-	//
-	// /** Calculates the required XP for the next level */
-	// int32 GetXPToNextLevel(int32 Level) const;
-	//
-	// /** Handles leveling logic */
-	// void HandleLevelUp(FClassProgressionData& ProgressionData);
 	
+	/** Whether auto-save is enabled */
+	UPROPERTY(EditAnywhere, Category="Progression")
+	bool bAutoSaveEnabled = true;
+	
+	/** Interval for auto-saving in seconds */
+	UPROPERTY(EditAnywhere, Category="Progression")
+	float AutoSaveInterval = 60.0f;
+	
+	/** Timer handle for auto-save */
+	FTimerHandle AutoSaveTimerHandle;
+	
+	/** Marks progression as needing a save */
+	UPROPERTY(Replicated)
+	bool bNeedsSave = false;
 };
