@@ -40,7 +40,7 @@ void FClassProgressionDataList::PreReplicatedRemove(const TArrayView<int32> Remo
 	{
 		//I doubt this one holds much value - i don't want to remove progression, let alone update the UI for that happening?
 		FClassProgressionEntry& Entry = Entries[Index];
-		// BroadcastChangeMessage(Entry);
+		BroadcastChangeMessage(Entry);
 	}}
 
 void FClassProgressionDataList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize)
@@ -48,7 +48,7 @@ void FClassProgressionDataList::PostReplicatedAdd(const TArrayView<int32> AddedI
 	for (int32 Index : AddedIndices)
 	{
 		FClassProgressionEntry& Entry = Entries[Index];
-		// BroadcastChangeMessage(Entry);
+		BroadcastChangeMessage(Entry);
 	}
 }
 
@@ -57,7 +57,7 @@ void FClassProgressionDataList::PostReplicatedChange(const TArrayView<int32> Cha
 	for (int32 Index : ChangedIndices)
 	{
 		FClassProgressionEntry& Entry = Entries[Index];
-		// BroadcastChangeMessage(Entry);
+		BroadcastChangeMessage(Entry);
 	}
 }
 
@@ -210,6 +210,10 @@ void UPlayerProgressionComponent::AddExperienceToClass(FGameplayTag ClassTag, in
 	MessageSystem.BroadcastMessage(TAG_Lyra_Progression_Message_Changed, Message);
 
 	SaveProgression();
+}
+
+void UPlayerProgressionComponent::SaveAbilityToSlot(FGameplayTag AbilityTag, int32 SlotIndex)
+{
 }
 
 

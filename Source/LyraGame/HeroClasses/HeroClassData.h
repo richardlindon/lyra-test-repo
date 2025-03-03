@@ -18,6 +18,8 @@ class ULyraGameplayAbility;
 class UObject;
 
 
+
+
 /**
  * FHeroClassData_GameplayAbility
  *
@@ -31,7 +33,7 @@ struct FHeroClassData_GameplayAbility
 public:
 
 	// Gameplay ability to grant.
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<ULyraGameplayAbility> Ability = nullptr;
 
 	// Level of ability to grant.
@@ -44,12 +46,14 @@ public:
 	// FGameplayTag InputTag;
 
 	//Unique ID to track and correlate ability between save data and active slots etc
-	UPROPERTY(EditDefaultsOnly)
-	FString AbilityUniqueId;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hero Classes")
+	FGameplayTag AbilityTag;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hero Classes")
 	FText AbilityDisplayName;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hero Classes")
+	FSlateBrush AbilityIcon;
 };
 
 
@@ -73,13 +77,16 @@ public:
 
 	// Gameplay abilities to choose from when this class is activated.
 	// Only bound abilities are added, if they were added by the user to either slot 1 or slot 2
-	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes", meta=(TitleProperty=Ability))
-	TArray<FHeroClassData_GameplayAbility> GrantedGameplayAbilities;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hero Classes", meta=(TitleProperty=Ability))
+	TArray<FHeroClassData_GameplayAbility> ClassAbilities;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes")
+	UFUNCTION(BlueprintPure, Category = "Hero Classes")
+	TArray<UHeroClassDataClassAbility*> GetAbilitiesForListView();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hero Classes")
 	FSlateBrush ClassIcon;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Hero Classes")
 	FText ClassDisplayName;
 
 protected:
@@ -91,6 +98,19 @@ protected:
 	// Attribute sets to grant when this class is activated.
 	UPROPERTY(EditDefaultsOnly, Category = "Hero Classes", meta=(TitleProperty=AttributeSet))
 	TArray<FLyraAbilitySet_AttributeSet> GrantedAttributes;
+};
 
-	
+
+/**
+ * UObject wrapper for a FHeroClassData_GameplayAbility so it can be used in a ListView.
+ */
+UCLASS(BlueprintType)
+class UHeroClassDataClassAbility : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	// The data stored in this list item
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FHeroClassData_GameplayAbility ClassAbility;
 };

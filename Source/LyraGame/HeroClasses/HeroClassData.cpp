@@ -68,3 +68,16 @@ void UHeroClassData::GiveToAbilitySystem(ULyraAbilitySystemComponent* LyraASC, F
 		}
 	}
 }
+
+TArray<UHeroClassDataClassAbility*> UHeroClassData::GetAbilitiesForListView()
+{
+	TArray<UHeroClassDataClassAbility*> ListItems;
+	for (FHeroClassData_GameplayAbility& StructItem : ClassAbilities)
+	{
+		UHeroClassDataClassAbility* Obj = NewObject<UHeroClassDataClassAbility>();
+		Obj->ClassAbility = StructItem;
+		ListItems.Add(Obj);
+	}
+	return ListItems;
+}
+

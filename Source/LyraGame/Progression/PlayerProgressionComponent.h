@@ -38,20 +38,6 @@ struct FHeroClassProgressionChangeMessage
 };
 
 USTRUCT(BlueprintType)
-struct FSkillChoice
-{
-	GENERATED_BODY()
-
-	// Skill ID (or type) that represents the skill chosen
-	// Or perhaps a gameplay ability?
-	// How do i flip the abilities around as the player swaps the skills...
-	// Perhaps simply change the binding to activate that ability
-	UPROPERTY(BlueprintReadWrite, Category="Progression")
-	int32 SkillID = 0;
-
-};
-
-USTRUCT(BlueprintType)
 struct FClassProgressionEntry : public FFastArraySerializerItem
 {
 	GENERATED_BODY()
@@ -67,8 +53,9 @@ struct FClassProgressionEntry : public FFastArraySerializerItem
 	UPROPERTY(BlueprintReadWrite, Category="Progression")
 	int32 Experience = 0;
 
-	// UPROPERTY(BlueprintReadWrite, Category="Progression")
-	// TArray<FSkillChoice>  SkillChoices;
+	//Active Skills choices on q (index 0) and e (index 1) where 
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	TArray<int32>  ActiveSkillIndexes;
 };
 
 USTRUCT(BlueprintType)
@@ -150,7 +137,7 @@ public:
 	// Called every frame - set up autosave within?
 	// virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintPure, Category = "Lyra|Health")
+	UFUNCTION(BlueprintPure, Category = "Progression")
 	static UPlayerProgressionComponent* FindProgressionComponent(const AController* Controller) { return (Controller ? Controller-> FindComponentByClass<UPlayerProgressionComponent>() : nullptr); }
 
 	UHeroClassManagerComponent* GetHeroManagerComponent() const;
@@ -161,6 +148,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Progression")
 	void AddExperienceToClass(FGameplayTag ClassTag, int32 Amount);
 
+	/** Saves ability to a slot. Does not swap the ability in to ASC */
+	UFUNCTION(BlueprintCallable, Category="Progression")
+	void SaveAbilityToSlot(FGameplayTag AbilityTag, int32 SlotIndex);
+	
 	// /** Gets the progression data for a specific class */
 	// UFUNCTION(BlueprintPure, Category="Progression")
 	// FClassProgressionData GetClassProgression(FName ClassID) const;
@@ -185,6 +176,8 @@ public:
 
 	FClassProgressionEntry* GetCurrentProgression();
 
+	TArray<int32> GetSavedSkillsForClassByTag(FGameplayTag ClassTag);
+	
 	UFUNCTION(Server, Reliable)
 	void ServerSyncProgression(const TArray<FClassProgressionSaveEntry>& ProgressionData);
 

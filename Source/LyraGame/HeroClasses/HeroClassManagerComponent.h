@@ -7,6 +7,7 @@
 #include "Components/ActorComponent.h"
 #include "HeroClassManagerComponent.generated.h"
 
+class UPlayerProgressionComponent;
 
 /** A message when the active class changes */
 USTRUCT(BlueprintType)
@@ -24,6 +25,19 @@ struct FHeroClassChangeMessage
 	FText ClassDisplayName;
 };
 
+/** A message when an ability binding for slot 1 or 2 is changed for the active class */
+USTRUCT(BlueprintType)
+struct FHeroAbilityChangeMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category="Hero Classes")
+	TObjectPtr<AActor> Owner = nullptr;
+	
+	UPROPERTY(BlueprintReadOnly, Category="Hero Classes")
+	int32 SlotIndexChanged = -1;
+};
+
 /**
  * @TODO: No idea if i need replication 
  */
@@ -39,7 +53,10 @@ public:
 
 	// Function to swap to a new ability set
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
-	void SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC);
+	void SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent);
+
+	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
+	void SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSwap, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent, int32 SlotIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex);
@@ -47,8 +64,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void RemoveAbilitySet(ULyraAbilitySystemComponent* ASC);
 
-	UPROPERTY(BlueprintReadOnly, Category = "Hero Classes")
+	UPROPERTY(BlueprintReadOnly, Category = "Hero Classes", ReplicatedUsing=OnRep_CurrentHeroClass)
 	TObjectPtr<UHeroClassData> CurrentHeroClass;
+
+	//Referenced for UI
+	UPROPERTY(BlueprintReadOnly, Category = "Hero Classes", ReplicatedUsing=OnRep_CurrentClassAbilitySlot1)
+	FHeroClassData_GameplayAbility CurrentClassAbilitySlot1;
+
+	//Referenced for UI
+	UPROPERTY(BlueprintReadOnly, Category = "Hero Classes", ReplicatedUsing=OnRep_CurrentClassAbilitySlot2)
+	FHeroClassData_GameplayAbility CurrentClassAbilitySlot2;
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	FText GetCurrentHeroClassDisplayName() const
@@ -58,6 +83,15 @@ public:
 	
 protected:
 
+	UFUNCTION()
+	void OnRep_CurrentHeroClass();
+
+	UFUNCTION()
+	void OnRep_CurrentClassAbilitySlot1();
+
+	UFUNCTION()
+	void OnRep_CurrentClassAbilitySlot2();
+	
 	FLyraAbilitySet_GrantedHandles GrantedAbilitySetHandles;
 
 	FGameplayAbilitySpecHandle ClassAbilitySlot1Handles;

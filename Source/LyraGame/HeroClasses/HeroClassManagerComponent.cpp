@@ -9,6 +9,8 @@
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/LyraGameplayAbility.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
+#include "Net/UnrealNetwork.h"
+#include "Progression/PlayerProgressionComponent.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Class_Message_Changed, "Lyra.Class.Message.Changed");
 
@@ -17,6 +19,16 @@ UHeroClassManagerComponent::UHeroClassManagerComponent(const FObjectInitializer&
 	: Super(ObjectInitializer)
 {
 }
+
+void UHeroClassManagerComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, CurrentHeroClass);
+	DOREPLIFETIME(ThisClass, CurrentClassAbilitySlot1);
+	DOREPLIFETIME(ThisClass, CurrentClassAbilitySlot2);
+}
+
 
 void UHeroClassManagerComponent::BeginPlay()
 {
@@ -42,7 +54,7 @@ void UHeroClassManagerComponent::BeginPlay()
  * this heroclassmanagercomponent will borrow heavily from lyraabilityset
  *   
  */
-void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC)
+void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent)
 {
 	// Remove the previously granted abilities
 
@@ -52,13 +64,19 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 		CurrentHeroClass = NewHeroClass;
 		
 		NewHeroClass->GiveToAbilitySystem(ASC, &GrantedAbilitySetHandles, this);
-
+		int32 Ability1SourceIndex = 0;
+		int32 Ability2SourceIndex = 1;
+		
+		if (ProgressionComponent)
+		{
+			
+		}
 		//Add specific abilities
 		//Determine which ability in a data set array to add to slot 1
 		//Temporary for loop to assign them until we set up ability for player to select ability for slot 
-		for (int32 AbilityIndex = 0; AbilityIndex < NewHeroClass->GrantedGameplayAbilities.Num() && AbilityIndex < 2; ++AbilityIndex)
+		for (int32 AbilityIndex = 0; AbilityIndex < NewHeroClass->ClassAbilities.Num() && AbilityIndex < 2; ++AbilityIndex)
 		{
-			const FHeroClassData_GameplayAbility& AbilityToGrant = NewHeroClass->GrantedGameplayAbilities[AbilityIndex];
+			const FHeroClassData_GameplayAbility& AbilityToGrant = NewHeroClass->ClassAbilities[AbilityIndex];
 
 			//Add the desired ability to slot 
 			GrantAbilityToSlot(AbilityToGrant, ASC, AbilityIndex);
@@ -73,9 +91,64 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 		UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(this->GetWorld());
 		MessageSystem.BroadcastMessage(TAG_Lyra_Class_Message_Changed, Message);
 	}
+}
+
+void UHeroClassManagerComponent::SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSave, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent, int32 SlotIndex = 0)
+{
+	UE_LOG(LogLyraAbilitySystem, Error, TEXT("GrantAbilityToSlot: Invalid slot number when attempting to grant class ability"));
+	if (SlotIndex < 0 || SlotIndex > 1)
+	{
+		UE_LOG(LogLyraAbilitySystem, Error, TEXT("GrantAbilityToSlot: Invalid slot number when attempting to grant class ability"));
+		return;
+	}
+	if (!ASC)
+	{
+		return;
+	}
+
+	
+	//Is ability in other slot?
+	if (SlotIndex == 0)
+	{
+		if (CurrentClassAbilitySlot2.Ability == AbilityToSave.Ability)
+		{
+			//Swap current slot 1 ability to slot 2
+			GrantAbilityToSlot(CurrentClassAbilitySlot1, ASC, 1);
+			
+		}
+		if (CurrentClassAbilitySlot1.Ability == AbilityToSave.Ability)
+		{
+			return;
+		}
+	} else if (SlotIndex == 1)
+	{
+		if (CurrentClassAbilitySlot1.Ability == AbilityToSave.Ability)
+		{
+			//Swap current slot 2 ability to slot 1
+			GrantAbilityToSlot(CurrentClassAbilitySlot2, ASC, 0);
+		}
+		if (CurrentClassAbilitySlot2.Ability == AbilityToSave.Ability)
+		{
+			return;
+		}
+	}
+
+		GrantAbilityToSlot(AbilityToSave, ASC, SlotIndex);
+	
+	// if (ProgressionComponent)
+	// {
+	// 	
+	// }
+	
 	
 }
 
+/**
+ * Called when ever ability is loaded, including when swapping class
+ * @param AbilityToGrant 
+ * @param ASC 
+ * @param SlotIndex 
+ */
 void UHeroClassManagerComponent::GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex = 0)
 {
 	UE_LOG(LogLyra, Log, TEXT("Granting ability to slot %d yo"), SlotIndex)
@@ -104,6 +177,7 @@ void UHeroClassManagerComponent::GrantAbilityToSlot(const FHeroClassData_Gamepla
 			ASC->ClearAbility(ClassAbilitySlot1Handles);
 		}
 		ClassAbilitySlot1Handles = AbilitySpecHandle;
+		CurrentClassAbilitySlot1 = AbilityToGrant;
 	} else if (SlotIndex == 1)
 	{
 		if (ClassAbilitySlot2Handles.IsValid())
@@ -111,6 +185,7 @@ void UHeroClassManagerComponent::GrantAbilityToSlot(const FHeroClassData_Gamepla
 			ASC->ClearAbility(ClassAbilitySlot2Handles);
 		}
 		ClassAbilitySlot2Handles = AbilitySpecHandle;
+		CurrentClassAbilitySlot2 = AbilityToGrant;
 	}
 	
 }
@@ -121,5 +196,20 @@ void UHeroClassManagerComponent::RemoveAbilitySet(ULyraAbilitySystemComponent* A
 	{
 		GrantedAbilitySetHandles.TakeFromAbilitySystem(ASC);
 	}
+}
+
+void UHeroClassManagerComponent::OnRep_CurrentHeroClass()
+{
+	//UI Message TODO
+}
+
+void UHeroClassManagerComponent::OnRep_CurrentClassAbilitySlot1()
+{
+	//UI Message TODO
+}
+
+void UHeroClassManagerComponent::OnRep_CurrentClassAbilitySlot2()
+{
+	//UI Message TODO
 }
 
