@@ -54,7 +54,7 @@ void UHeroClassManagerComponent::BeginPlay()
  * this heroclassmanagercomponent will borrow heavily from lyraabilityset
  *   
  */
-void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent)
+void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC)
 {
 	// Remove the previously granted abilities
 
@@ -64,26 +64,43 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 		CurrentHeroClass = NewHeroClass;
 		
 		NewHeroClass->GiveToAbilitySystem(ASC, &GrantedAbilitySetHandles, this);
-		int32 Ability1SourceIndex = 0;
-		int32 Ability2SourceIndex = 1;
 		
-		if (ProgressionComponent)
+		UPlayerProgressionComponent* PC = GetProgressionComponent();	
+		if (!PC)
 		{
-			
+			UE_LOG(LogLyraAbilitySystem, Error, TEXT("GrantAbilityToSlot: Could not get progression component to save update"));
+			return;
 		}
+		TArray<FGameplayTag> SavedAbilities = PC->GetSavedAbilitiesByClassTag(NewHeroClass->ClassTag);
 		//Add specific abilities
 		//Determine which ability in a data set array to add to slot 1
 		//Temporary for loop to assign them until we set up ability for player to select ability for slot 
-		for (int32 AbilityIndex = 0; AbilityIndex < NewHeroClass->ClassAbilities.Num() && AbilityIndex < 2; ++AbilityIndex)
+		if (SavedAbilities.IsEmpty())
 		{
-			const FHeroClassData_GameplayAbility& AbilityToGrant = NewHeroClass->ClassAbilities[AbilityIndex];
-
-			//Add the desired ability to slot 
-			GrantAbilityToSlot(AbilityToGrant, ASC, AbilityIndex);
+			for (int32 AbilityIndex = 0; AbilityIndex < NewHeroClass->ClassAbilities.Num() && AbilityIndex < 2; ++AbilityIndex)
+			{
+			
+				const FHeroClassData_GameplayAbility& Ability = NewHeroClass->ClassAbilities[AbilityIndex];
+				GrantAbilityToSlot(Ability, ASC, AbilityIndex);
+			}
+		}
+		else
+		{
+			for (int32 AbilityIndex = 0; AbilityIndex < NewHeroClass->ClassAbilities.Num(); ++AbilityIndex)
+			{
+				const FHeroClassData_GameplayAbility& Ability = NewHeroClass->ClassAbilities[AbilityIndex];
+				//Check for assigning to slot 1
+				if (Ability.AbilityTag == SavedAbilities[0])
+				{
+					GrantAbilityToSlot(Ability, ASC, 0);
+				}
+				if (Ability.AbilityTag == SavedAbilities[1])
+				{
+					GrantAbilityToSlot(Ability, ASC, 1);
+				}
+			}
 		}
 		
-		//Determine which ability in a data set array to add to slot 2
-
 		FHeroClassChangeMessage Message;
 		Message.Owner = GetOwner();
 		Message.NewClassTag = NewHeroClass->ClassTag;
@@ -93,7 +110,10 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 	}
 }
 
-void UHeroClassManagerComponent::SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSave, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent, int32 SlotIndex = 0)
+//TODO: This method does not yet handle if the class is not active
+// We potentially need a new function for saving any ability to the progression component at any time (EG for use in a loadout menu)
+// and to limit this on the fly adjustment to the current class only
+void UHeroClassManagerComponent::SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSave, ULyraAbilitySystemComponent* ASC, FGameplayTag ClassTag, int32 SlotIndex = 0)
 {
 	UE_LOG(LogLyraAbilitySystem, Error, TEXT("GrantAbilityToSlot: Invalid slot number when attempting to grant class ability"));
 	if (SlotIndex < 0 || SlotIndex > 1)
@@ -106,15 +126,22 @@ void UHeroClassManagerComponent::SaveAbilityToSlot(const FHeroClassData_Gameplay
 		return;
 	}
 
+	bool isActiveClass = ClassTag == CurrentHeroClass->ClassTag;
 	
+	UPlayerProgressionComponent* PC = GetProgressionComponent();	
+	if (!PC)
+	{
+		UE_LOG(LogLyraAbilitySystem, Error, TEXT("GrantAbilityToSlot: Could not get progression component to save update"));
+		return;
+	}
 	//Is ability in other slot?
 	if (SlotIndex == 0)
 	{
 		if (CurrentClassAbilitySlot2.Ability == AbilityToSave.Ability)
 		{
 			//Swap current slot 1 ability to slot 2
-			GrantAbilityToSlot(CurrentClassAbilitySlot1, ASC, 1);
-			
+			isActiveClass && GrantAbilityToSlot(CurrentClassAbilitySlot1, ASC, 1);
+			PC->SaveAbilityToSlot(CurrentClassAbilitySlot1.AbilityTag, 1, ClassTag);
 		}
 		if (CurrentClassAbilitySlot1.Ability == AbilityToSave.Ability)
 		{
@@ -125,7 +152,8 @@ void UHeroClassManagerComponent::SaveAbilityToSlot(const FHeroClassData_Gameplay
 		if (CurrentClassAbilitySlot1.Ability == AbilityToSave.Ability)
 		{
 			//Swap current slot 2 ability to slot 1
-			GrantAbilityToSlot(CurrentClassAbilitySlot2, ASC, 0);
+			isActiveClass && GrantAbilityToSlot(CurrentClassAbilitySlot2, ASC, 0);
+			PC->SaveAbilityToSlot(CurrentClassAbilitySlot2.AbilityTag, 0,ClassTag);
 		}
 		if (CurrentClassAbilitySlot2.Ability == AbilityToSave.Ability)
 		{
@@ -133,13 +161,8 @@ void UHeroClassManagerComponent::SaveAbilityToSlot(const FHeroClassData_Gameplay
 		}
 	}
 
-		GrantAbilityToSlot(AbilityToSave, ASC, SlotIndex);
-	
-	// if (ProgressionComponent)
-	// {
-	// 	
-	// }
-	
+	isActiveClass && GrantAbilityToSlot(AbilityToSave, ASC, SlotIndex);
+	PC->SaveAbilityToSlot(AbilityToSave.AbilityTag, SlotIndex,ClassTag);
 	
 }
 
@@ -211,5 +234,19 @@ void UHeroClassManagerComponent::OnRep_CurrentClassAbilitySlot1()
 void UHeroClassManagerComponent::OnRep_CurrentClassAbilitySlot2()
 {
 	//UI Message TODO
+}
+
+UPlayerProgressionComponent* UHeroClassManagerComponent::GetProgressionComponent() const
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetOwner()))
+	{
+		if (APlayerState* PS =  PC->PlayerState)
+		{
+			if (UPlayerProgressionComponent* ProgressionComponent = PS->GetComponentByClass<UPlayerProgressionComponent>()) {
+				return ProgressionComponent;
+			}
+		}
+	}
+	return nullptr;
 }
 

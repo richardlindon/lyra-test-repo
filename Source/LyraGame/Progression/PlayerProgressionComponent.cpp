@@ -73,6 +73,27 @@ void FClassProgressionDataList::BroadcastChangeMessage(FClassProgressionEntry& E
 	MessageSystem.BroadcastMessage(TAG_Lyra_Progression_Message_Changed, Message);
 }
 
+void FClassProgressionDataList::UpsertClassSkillChoice(FGameplayTag ClassTag, FGameplayTag AbilityTag, int32 SlotIndex)
+{
+	if (FClassProgressionEntry* ExistingEntry = FindExistingByTag(ClassTag))
+	{
+		if (!ExistingEntry->SavedClassAbilityTags.IsValidIndex(SlotIndex))
+		{
+			ExistingEntry->SavedClassAbilityTags.SetNum(SlotIndex + 1); 
+		}
+		ExistingEntry->SavedClassAbilityTags[SlotIndex] = AbilityTag;
+		MarkItemDirty(*ExistingEntry);
+	}
+	else
+	{
+		FClassProgressionEntry& NewEntry = Entries.AddDefaulted_GetRef();
+		NewEntry.SavedClassAbilityTags.SetNum(SlotIndex + 1); 
+		NewEntry.SavedClassAbilityTags[SlotIndex] = AbilityTag;
+		NewEntry.ClassTag = ClassTag;
+		MarkItemDirty(NewEntry);
+	}
+}
+
 void FClassProgressionDataList::UpsertClassProgress(FGameplayTag ClassTag, int32 Level, int32 Experience)
 {
 	// Check if the entry exists by UniqueId
@@ -92,6 +113,41 @@ void FClassProgressionDataList::UpsertClassProgress(FGameplayTag ClassTag, int32
 		MarkItemDirty(NewEntry);
 	}
 }
+
+void FClassProgressionDataList::UpsertClassProgression(
+	FGameplayTag ClassTag,
+	TOptional<int32> Level,
+	TOptional<int32> Experience,
+	TOptional<TArray<FGameplayTag>> SavedClassAbilityTags)
+{
+	FClassProgressionEntry* ExistingEntry = FindExistingByTag(ClassTag);
+	if (!ExistingEntry)
+	{
+		// Create new entry if none exists
+		FClassProgressionEntry& NewEntry = Entries.AddDefaulted_GetRef();
+		NewEntry.ClassTag = ClassTag;
+		ExistingEntry = &NewEntry;
+	}
+    
+	// Update Level and Experience if provided
+	if (Level.IsSet())
+	{
+		ExistingEntry->Level = Level.GetValue();
+	}
+	if (Experience.IsSet())
+	{
+		ExistingEntry->Experience = Experience.GetValue();
+	}
+    
+	// Update AbilityTag if SlotIndex is valid
+	if (SavedClassAbilityTags.IsSet())
+	{
+		ExistingEntry->SavedClassAbilityTags = SavedClassAbilityTags.GetValue();
+	}
+    
+	MarkItemDirty(*ExistingEntry);
+}
+
 
 FClassProgressionEntry* FClassProgressionDataList::FindExistingByTag(FGameplayTag ClassTag)
 {
@@ -212,10 +268,10 @@ void UPlayerProgressionComponent::AddExperienceToClass(FGameplayTag ClassTag, in
 	SaveProgression();
 }
 
-void UPlayerProgressionComponent::SaveAbilityToSlot(FGameplayTag AbilityTag, int32 SlotIndex)
+void UPlayerProgressionComponent::SaveAbilityToSlot(FGameplayTag AbilityTag, int32 SlotIndex, FGameplayTag ClassTag)
 {
+	ClassProgressionList.UpsertClassSkillChoice(ClassTag, AbilityTag, SlotIndex);
 }
-
 
 int32 UPlayerProgressionComponent::GetCurrentLevel()
 {
@@ -226,7 +282,6 @@ int32 UPlayerProgressionComponent::GetCurrentLevel()
 	return 0;
 }
 
-
 TObjectPtr<UHeroClassData> UPlayerProgressionComponent::GetCurrentClass() const
 {
 	if (UHeroClassManagerComponent* HeroManager = GetHeroManagerComponent())
@@ -236,19 +291,34 @@ TObjectPtr<UHeroClassData> UPlayerProgressionComponent::GetCurrentClass() const
 	return nullptr;
 }
 
+FClassProgressionEntry* UPlayerProgressionComponent::GetProgressionByClassTag(FGameplayTag ClassTag)
+{
+	if (FClassProgressionEntry* ProgressionEntry = ClassProgressionList.FindExistingByTag(ClassTag))
+	{
+		return ProgressionEntry;
+	}
+	
+	return nullptr;
+}
+
 FClassProgressionEntry* UPlayerProgressionComponent::GetCurrentProgression()
 {
 	if (TObjectPtr<UHeroClassData> CurrentClass = GetCurrentClass())
 	{
 		FGameplayTag CurrentClassTag = CurrentClass->ClassTag;
-		if (FClassProgressionEntry* CurrentProgression = ClassProgressionList.FindExistingByTag(CurrentClassTag))
-		{
-			return CurrentProgression;
-		}
+		return GetProgressionByClassTag(CurrentClassTag);
 	}
 	return nullptr;
 }
 
+TArray<FGameplayTag> UPlayerProgressionComponent::GetSavedAbilitiesByClassTag(FGameplayTag ClassTag)
+{
+	if (FClassProgressionEntry* Progression = GetProgressionByClassTag(ClassTag))
+	{
+		return Progression->SavedClassAbilityTags;
+	}
+	return TArray<FGameplayTag>();
+}
 
 int32 UPlayerProgressionComponent::GetExperienceRequired()
 {
@@ -290,6 +360,7 @@ TArray<FClassProgressionSaveEntry> UPlayerProgressionComponent::ConvertToSaveEnt
     	SaveEntry.ClassTag = Entry.ClassTag;
     	SaveEntry.Level = Entry.Level;
     	SaveEntry.Experience = Entry.Experience;
+    	SaveEntry.SavedClassAbilityTags = Entry.SavedClassAbilityTags;
         SaveEntries.Add(SaveEntry);
     }
     return SaveEntries;
@@ -317,7 +388,7 @@ void UPlayerProgressionComponent::LoadProgression()
 		{
 			for (const FClassProgressionSaveEntry& Entry : LoadedSave->SavedProgression)
 			{
-				ClassProgressionList.UpsertClassProgress(Entry.ClassTag, Entry.Level, Entry.Experience);
+				ClassProgressionList.UpsertClassProgression(Entry.ClassTag, TOptional<int32>(Entry.Level), TOptional<int32>(Entry.Experience), TOptional<TArray<FGameplayTag>>(Entry.SavedClassAbilityTags));
 			}
 		} else
 		{

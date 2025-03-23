@@ -24,6 +24,8 @@ struct FClassProgressionSaveEntry
 	UPROPERTY(BlueprintReadWrite, Category="Progression")
 	int32 Experience = 0;
 
+	UPROPERTY(BlueprintReadWrite, Category="Progression")
+	TArray<FGameplayTag> SavedClassAbilityTags;
 };
 
 /**

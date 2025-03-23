@@ -53,9 +53,9 @@ struct FClassProgressionEntry : public FFastArraySerializerItem
 	UPROPERTY(BlueprintReadWrite, Category="Progression")
 	int32 Experience = 0;
 
-	//Active Skills choices on q (index 0) and e (index 1) where 
+	//Active Skills choices on q (slot 1, index 0) and e (slot 2, index 1) 
 	UPROPERTY(BlueprintReadWrite, Category="Progression")
-	TArray<int32>  ActiveSkillIndexes;
+	TArray<FGameplayTag> SavedClassAbilityTags;
 };
 
 USTRUCT(BlueprintType)
@@ -88,8 +88,10 @@ public:
 		return FFastArraySerializer::FastArrayDeltaSerialize<FClassProgressionEntry, FClassProgressionDataList>(Entries, DeltaParms, *this);
 	}
 
-	
+
+	void UpsertClassSkillChoice(FGameplayTag ClassTag, FGameplayTag AbilityTag, int32 SlotIndex);
 	void UpsertClassProgress(FGameplayTag ClassTag, int32 Level, int32 Experience);
+	void UpsertClassProgression(FGameplayTag ClassTag, TOptional<int32> Level, TOptional<int32> Experience, TOptional<TArray<FGameplayTag>> SavedClassAbilityTags);
 	FClassProgressionEntry* FindExistingByTag(FGameplayTag ClassTag);
 	// ULyraInventoryItemInstance* AddEntry(TSubclassOf<ULyraInventoryItemDefinition> ItemClass, int32 StackCount);
 	// void AddEntry(ULyraInventoryItemInstance* Instance);
@@ -124,7 +126,7 @@ struct TStructOpsTypeTraits<FClassProgressionDataList> : public TStructOpsTypeTr
 
 
 
-
+//Player state component
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LYRAGAME_API UPlayerProgressionComponent : public UPlayerStateComponent
 {
@@ -150,7 +152,7 @@ public:
 
 	/** Saves ability to a slot. Does not swap the ability in to ASC */
 	UFUNCTION(BlueprintCallable, Category="Progression")
-	void SaveAbilityToSlot(FGameplayTag AbilityTag, int32 SlotIndex);
+	void SaveAbilityToSlot(FGameplayTag AbilityTag, int32 SlotIndex, FGameplayTag ClassTag);
 	
 	// /** Gets the progression data for a specific class */
 	// UFUNCTION(BlueprintPure, Category="Progression")
@@ -176,8 +178,9 @@ public:
 
 	FClassProgressionEntry* GetCurrentProgression();
 
-	TArray<int32> GetSavedSkillsForClassByTag(FGameplayTag ClassTag);
-	
+	TArray<FGameplayTag> GetSavedAbilitiesByClassTag(FGameplayTag ClassTag);
+	FClassProgressionEntry* GetProgressionByClassTag(FGameplayTag ClassTag);
+
 	UFUNCTION(Server, Reliable)
 	void ServerSyncProgression(const TArray<FClassProgressionSaveEntry>& ProgressionData);
 
@@ -199,9 +202,8 @@ private:
 	FClassProgressionDataList ClassProgressionList;
 	
 	TObjectPtr<UHeroClassData> GetCurrentClass() const;
-	
-	
-	
+
+
 	/** Whether auto-save is enabled */
 	UPROPERTY(EditAnywhere, Category="Progression")
 	bool bAutoSaveEnabled = true;

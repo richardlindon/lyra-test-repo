@@ -76,6 +76,7 @@ TArray<UHeroClassDataClassAbility*> UHeroClassData::GetAbilitiesForListView()
 	{
 		UHeroClassDataClassAbility* Obj = NewObject<UHeroClassDataClassAbility>();
 		Obj->ClassAbility = StructItem;
+		Obj->ClassTag = ClassTag;
 		ListItems.Add(Obj);
 	}
 	return ListItems;

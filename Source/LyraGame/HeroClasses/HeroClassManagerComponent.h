@@ -38,9 +38,7 @@ struct FHeroAbilityChangeMessage
 	int32 SlotIndexChanged = -1;
 };
 
-/**
- * @TODO: No idea if i need replication 
- */
+// Controller component
 UCLASS(BlueprintType)
 class LYRAGAME_API UHeroClassManagerComponent : public UActorComponent
 {
@@ -53,10 +51,10 @@ public:
 
 	// Function to swap to a new ability set
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
-	void SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent);
+	void SwapHeroClass(UHeroClassData* NewHeroClass, ULyraAbilitySystemComponent* ASC);
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
-	void SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSwap, ULyraAbilitySystemComponent* ASC, UPlayerProgressionComponent* ProgressionComponent, int32 SlotIndex);
+	void SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSwap, ULyraAbilitySystemComponent* ASC, FGameplayTag ClassTag, int32 SlotIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex);
@@ -104,5 +102,5 @@ private:
 
 	FGameplayTag ClassSpecial2Tag;
 
-	
+	UPlayerProgressionComponent* GetProgressionComponent() const;	
 };

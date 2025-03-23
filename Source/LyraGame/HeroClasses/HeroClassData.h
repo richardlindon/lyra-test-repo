@@ -113,4 +113,8 @@ public:
 	// The data stored in this list item
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FHeroClassData_GameplayAbility ClassAbility;
+
+	// Reference to the hero class this ability belongs to, for progression saving purposes
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FGameplayTag ClassTag;
 };
