@@ -161,6 +161,9 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category="Progression")
 	int32 GetCurrentLevel();
+
+	UFUNCTION(BlueprintPure, Category="Progression")
+	int32 GetLevelByClassTag(FGameplayTag ClassTag);
 	
 	UFUNCTION(BlueprintPure, Category="Progression")
 	int32 GetExperienceRequired();

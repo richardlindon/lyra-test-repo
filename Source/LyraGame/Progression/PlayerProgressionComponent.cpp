@@ -282,6 +282,15 @@ int32 UPlayerProgressionComponent::GetCurrentLevel()
 	return 0;
 }
 
+int32 UPlayerProgressionComponent::GetLevelByClassTag(FGameplayTag ClassTag)
+{
+	if (FClassProgressionEntry* ClassProgression = GetProgressionByClassTag(ClassTag))
+	{
+		return ClassProgression->Level;
+	}
+	return 0;
+}
+
 TObjectPtr<UHeroClassData> UPlayerProgressionComponent::GetCurrentClass() const
 {
 	if (UHeroClassManagerComponent* HeroManager = GetHeroManagerComponent())

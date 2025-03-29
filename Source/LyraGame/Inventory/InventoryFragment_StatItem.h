@@ -18,18 +18,22 @@ class LYRAGAME_API UInventoryFragment_StatItem : public ULyraInventoryItemFragme
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category=Lyra)
+	UPROPERTY(EditAnywhere, Category=Inventory)
 	bool IsEquipped = false;
 
-	UPROPERTY(EditAnywhere, Category=Lyra)
+	UPROPERTY(EditAnywhere, Category=Inventory)
 	int EquippedSlot = 0;
 	
-	UPROPERTY(EditDefaultsOnly, Category=Lyra);
+	UPROPERTY(EditDefaultsOnly, Category=Inventory)
 	TSubclassOf<UGameplayEffect> GameplayEffect = nullptr;
 
 	// Gameplay ability sets to grant when this is picked up
-    UPROPERTY(EditDefaultsOnly, Category=Lyra)
+    UPROPERTY(EditDefaultsOnly, Category=Inventory)
     TArray<TObjectPtr<const ULyraAbilitySet>> AbilitySetsToGrant;
+
+	//ClassTag this item relates to if granting a class. Used to display relevant class ability selection 
+	UPROPERTY(EditAnywhere, Category=Inventory)
+	FGameplayTag ClassGranted;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
 	FSlateBrush Brush;

@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int32 GetItemCurrentSlotIndex(const ULyraInventoryItemInstance* Item) const;
 
+	UFUNCTION(BlueprintCallable)
+	TArray<FGameplayTag> GetSlottedClasses();
+	
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	void RemoveItemFromQuickbar(const ULyraInventoryItemInstance* Item);
 

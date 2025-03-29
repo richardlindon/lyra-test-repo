@@ -40,6 +40,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	int32 AbilityLevel = 1;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hero Classes")
+	int32 ClassLevelRequired = 0;
+
 	// Tag used to process input for the ability.
 	// UNUSED FOR NOW - hero abilities are added to a predefined input tag
 	// UPROPERTY(EditDefaultsOnly, Meta = (Categories = "InputTag"))

@@ -57,7 +57,7 @@ public:
 	void SaveAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToSwap, ULyraAbilitySystemComponent* ASC, FGameplayTag ClassTag, int32 SlotIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
-	void GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, int32 SlotIndex);
+	void GrantAbilityToSlot(const FHeroClassData_GameplayAbility& AbilityToGrant, ULyraAbilitySystemComponent* ASC, FGameplayTag ClassTag, int32 SlotIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "Hero Classes")
 	void RemoveAbilitySet(ULyraAbilitySystemComponent* ASC);

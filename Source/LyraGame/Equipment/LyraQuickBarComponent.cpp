@@ -126,6 +126,8 @@ void ULyraQuickBarComponent::EquipItemInSlot()
 						FString::Printf(TEXT("Found ASC, attempting to activate"))
 					);
 				}
+				//Activate ability in slot if swapping
+				//Prevent swapping to slot
 				TArray<FGameplayAbilitySpecHandle> AbilityHandles = SlotItem->GrantedHandles.GetAllAbilityHandles();
 				if (!AbilityHandles.IsEmpty())
 				{
@@ -240,6 +242,25 @@ int32  ULyraQuickBarComponent::GetItemCurrentSlotIndex(const ULyraInventoryItemI
 	}
 
 	return -1;
+}
+
+TArray<FGameplayTag> ULyraQuickBarComponent::GetSlottedClasses() 
+{
+	TArray<FGameplayTag> ClassesSlotted;
+	for (int32 Index = 0; Index < Slots.Num(); ++Index)
+	{
+		if (ULyraInventoryItemInstance* Item = Slots[Index])
+		{
+			if (const UInventoryFragment_StatItem* StatItemFragment = Item->FindFragmentByClass<UInventoryFragment_StatItem>())
+			{
+				if (StatItemFragment->ClassGranted.IsValid() && StatItemFragment->ClassGranted.RequestDirectParent().ToString() == "Class")
+				{
+					ClassesSlotted.Add(StatItemFragment->ClassGranted);
+				}
+			}
+		}
+	}
+	return ClassesSlotted;	
 }
 
 void ULyraQuickBarComponent::RemoveItemFromQuickbar(const ULyraInventoryItemInstance* Item)
