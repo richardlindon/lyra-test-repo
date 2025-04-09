@@ -32,7 +32,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Appearance)
 	FText TooltipDescription;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item")
-	int32 ItemCost;
 };

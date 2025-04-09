@@ -13,6 +13,8 @@ class FLifetimeProperty;
 ULyraCombatSet::ULyraCombatSet()
 	: BaseDamage(0.0f)
 	, BaseHeal(0.0f)
+	, BonusDamage(0.0f)
+	, BonusHeal(0.0f)
 {
 }
 
@@ -22,6 +24,8 @@ void ULyraCombatSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	DOREPLIFETIME_CONDITION_NOTIFY(ULyraCombatSet, BaseDamage, COND_OwnerOnly, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(ULyraCombatSet, BaseHeal, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULyraCombatSet, BonusDamage, COND_OwnerOnly, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(ULyraCombatSet, BonusHeal, COND_OwnerOnly, REPNOTIFY_Always);
 }
 
 void ULyraCombatSet::OnRep_BaseDamage(const FGameplayAttributeData& OldValue)
@@ -32,5 +36,15 @@ void ULyraCombatSet::OnRep_BaseDamage(const FGameplayAttributeData& OldValue)
 void ULyraCombatSet::OnRep_BaseHeal(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(ULyraCombatSet, BaseHeal, OldValue);
+}
+
+void ULyraCombatSet::OnRep_BonusDamage(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULyraCombatSet, BonusDamage, OldValue);
+}
+
+void ULyraCombatSet::OnRep_BonusHeal(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ULyraCombatSet, BonusHeal, OldValue);
 }
 
