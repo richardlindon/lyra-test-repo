@@ -3,6 +3,7 @@
 #include "LyraInventoryManagerComponent.h"
 
 #include "AbilitySystemGlobals.h"
+#include "InventoryFragment_SharedStatTags.h"
 #include "InventoryFragment_StatItem.h"
 #include "Engine/ActorChannel.h"
 #include "Engine/World.h"
@@ -352,6 +353,105 @@ bool ULyraInventoryManagerComponent::ConsumeItemsByDefinition(TSubclassOf<ULyraI
 	}
 
 	return TotalConsumed == NumToConsume;
+}
+
+TArray<ULyraInventoryItemInstance*> ULyraInventoryManagerComponent::FindItemsProvidingSharedStat(FGameplayTag SharedTag)
+{
+	TArray<ULyraInventoryItemInstance*> MatchingItems;
+
+	for (ULyraInventoryItemInstance* Item : InventoryList.GetAllItems())
+	{
+		if (!Item) continue;
+
+		if (Item->HasSharedStatTag(SharedTag))
+		{
+			MatchingItems.Add(Item);
+		}
+	}
+
+	return MatchingItems;
+}
+
+int32 ULyraInventoryManagerComponent::GetTotalSharedStatStack(FGameplayTag SharedTag)
+{
+	if (!SharedTag.IsValid())
+	{
+		return 0;
+	}
+	
+	int32 Total = 0;
+
+	for (ULyraInventoryItemInstance* Item : InventoryList.GetAllItems())
+	{
+		if (!Item) continue;
+		int32 Count = Item->GetSharedStackCount(SharedTag);
+		Total += Count;
+	}
+
+	return Total;
+}
+
+bool ULyraInventoryManagerComponent::ConsumeFromSmallestStack(FGameplayTag SharedTag, int32 Amount)
+{
+	if (Amount <= 0)
+	{
+		return false;
+	}
+
+	// Find all items that provide the shared stat
+	TArray<ULyraInventoryItemInstance*> MatchingItems = FindItemsProvidingSharedStat(SharedTag);
+	if (MatchingItems.Num() == 0)
+	{
+		return false;
+	}
+
+	// Sort by stack count ascending (smallest first)
+	MatchingItems.Sort([&SharedTag](const ULyraInventoryItemInstance& A, const ULyraInventoryItemInstance& B)
+	{
+		const int32 StackA = A.GetSharedStackCount(SharedTag);
+		const int32 StackB = B.GetSharedStackCount(SharedTag);
+		return StackA < StackB;
+	});
+
+	int32 Remaining = Amount;
+	TArray<ULyraInventoryItemInstance*> ItemsToRemove;
+
+	for (ULyraInventoryItemInstance* Item : MatchingItems)
+	{
+		if (!Item) continue;
+
+		const int32 CurrentCount = Item->GetSharedStackCount(SharedTag);
+
+		if (CurrentCount <= 0)
+		{
+			continue;
+		}
+		
+		const int32 ToConsume = FMath::Min(CurrentCount, Remaining);
+		if (CurrentCount <= ToConsume)
+		{
+			//Consume entire item stack
+			ItemsToRemove.Add(Item);
+		}
+		else
+		{
+			Item->RemoveStatTagStack(SharedTag, ToConsume);
+		}
+		Remaining -= ToConsume;
+		
+		
+		if (Remaining <= 0)
+		{
+			break; 
+		}
+	}
+
+	for (ULyraInventoryItemInstance* Item : ItemsToRemove)
+	{
+		RemoveItemInstance(Item);
+	}
+	
+	return Remaining <= 0;
 }
 
 void ULyraInventoryManagerComponent::ReadyForReplication()

@@ -42,10 +42,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category=Inventory)
 	int32 GetStatTagStackCount(FGameplayTag Tag) const;
 
+	UFUNCTION(BlueprintCallable, Category=Inventory)
+	int32 GetSharedStackCount(FGameplayTag SharedTag) const;
+	
 	// Returns true if there is at least one stack of the specified tag
 	UFUNCTION(BlueprintCallable, Category=Inventory)
 	bool HasStatTag(FGameplayTag Tag) const;
 
+	// Returns true if there is at least one stack of the specified tag
+	UFUNCTION(BlueprintCallable, Category=Inventory)
+	bool HasSharedStatTag(FGameplayTag Tag) const;
+
+	// Get the required stat tag
+	UFUNCTION(BlueprintCallable, Category=Inventory)
+	FGameplayTag GetConsumedSharedStatTag() const;
+
+	
 	TSubclassOf<ULyraInventoryItemDefinition> GetItemDef() const
 	{
 		return ItemDef;

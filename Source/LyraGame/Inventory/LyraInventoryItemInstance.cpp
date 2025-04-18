@@ -9,6 +9,8 @@
 #include "Iris/ReplicationSystem/ReplicationFragmentUtil.h"
 #endif // UE_WITH_IRIS
 
+#include "InventoryFragment_SharedStatTags.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraInventoryItemInstance)
 
 class FLifetimeProperty;
@@ -51,9 +53,40 @@ int32 ULyraInventoryItemInstance::GetStatTagStackCount(FGameplayTag Tag) const
 	return StatTags.GetStackCount(Tag);
 }
 
+int32 ULyraInventoryItemInstance::GetSharedStackCount(FGameplayTag SharedTag) const
+{
+	if (const UInventoryFragment_SharedStatTags* SharedStatFragment = FindFragmentByClass<UInventoryFragment_SharedStatTags>())
+	{
+		if (SharedStatFragment->SharedStatTags.HasTag(SharedTag))
+		{
+			return GetStatTagStackCount(SharedTag);
+		}
+	}
+	return 0;
+}
+
+
 bool ULyraInventoryItemInstance::HasStatTag(FGameplayTag Tag) const
 {
 	return StatTags.ContainsTag(Tag);
+}
+
+bool ULyraInventoryItemInstance::HasSharedStatTag(FGameplayTag SharedTag) const
+{
+	if (const UInventoryFragment_SharedStatTags* SharedStatFragment = FindFragmentByClass<UInventoryFragment_SharedStatTags>())
+	{
+		return SharedStatFragment->SharedStatTags.HasTag(SharedTag);
+	}
+	return false;
+}
+
+FGameplayTag ULyraInventoryItemInstance::GetConsumedSharedStatTag() const
+{
+	if (const UInventoryFragment_SharedStatTags* SharedStatFragment = FindFragmentByClass<UInventoryFragment_SharedStatTags>())
+	{
+		return SharedStatFragment->ConsumedSharedStatStack;
+	}
+	return FGameplayTag::EmptyTag;
 }
 
 void ULyraInventoryItemInstance::SetItemDef(TSubclassOf<ULyraInventoryItemDefinition> InDef)

@@ -166,7 +166,20 @@ public:
 
 	int32 GetTotalItemCountByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const;
 	bool ConsumeItemsByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 NumToConsume);
-		
+
+	// Get all items that provide the shared tag
+	UFUNCTION(BlueprintCallable, Category=Inventory)
+	TArray<ULyraInventoryItemInstance*> FindItemsProvidingSharedStat(FGameplayTag SharedTag);
+
+	// Get current total for a shared tag
+	UFUNCTION(BlueprintCallable, Category=Inventory)
+	int32 GetTotalSharedStatStack(FGameplayTag SharedTag);
+	
+	// Remove N ammo from the smallest matching stack
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category=Inventory)
+	bool ConsumeFromSmallestStack(FGameplayTag SharedTag, int32 Amount);
+
+	
 	//~UObject interface
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
 	virtual void ReadyForReplication() override;
