@@ -26,6 +26,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Lyra")
 	void CycleActiveSlotBackward();
+	bool IsEquippableItemInSlot(int32 SlotIndex);
+	bool IsActivatableItemInSlot(int32 SlotIndex);
+	void ActivateItemAbilityInSlot(int32 SlotIndex);
 
 	UFUNCTION(Server, Reliable, BlueprintCallable, Category="Lyra")
 	void SetActiveSlotIndex(int32 NewIndex);
@@ -53,6 +56,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	void RemoveItemFromQuickbar(const ULyraInventoryItemInstance* Item);
+
+	UFUNCTION(BlueprintCallable)
+	static bool IsSlottableItem(ULyraInventoryItemInstance* Item);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	void AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item);

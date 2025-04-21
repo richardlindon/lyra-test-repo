@@ -48,6 +48,7 @@ void ULyraQuickBarComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
+//Non-equippable items will be in slots. Cycle must be reworked to skip over (FS-89)
 void ULyraQuickBarComponent::CycleActiveSlotForward()
 {
 	if (Slots.Num() < 2)
@@ -68,6 +69,7 @@ void ULyraQuickBarComponent::CycleActiveSlotForward()
 	} while (NewIndex != OldIndex);
 }
 
+//Non-equippable items will be in slots. Cycle must be reworked to skip over (FS-89)
 void ULyraQuickBarComponent::CycleActiveSlotBackward()
 {
 	if (Slots.Num() < 2)
@@ -86,6 +88,55 @@ void ULyraQuickBarComponent::CycleActiveSlotBackward()
 			return;
 		}
 	} while (NewIndex != OldIndex);
+}
+
+bool ULyraQuickBarComponent::IsEquippableItemInSlot(int32 SlotIndex)
+{
+	if (ULyraInventoryItemInstance* SlotItem = Slots[SlotIndex])
+	{
+		if (const UInventoryFragment_EquippableItem* EquipInfo = SlotItem->FindFragmentByClass<UInventoryFragment_EquippableItem>())
+		{
+			TSubclassOf<ULyraEquipmentDefinition> EquipDef = EquipInfo->EquipmentDefinition;
+			return EquipDef != nullptr;
+		}
+	}
+	return false;
+}
+
+bool ULyraQuickBarComponent::IsActivatableItemInSlot(int32 SlotIndex)
+{
+	if (ULyraInventoryItemInstance* SlotItem = Slots[SlotIndex])
+	{
+		TArray<FGameplayAbilitySpecHandle> AbilityHandles = SlotItem->GrantedHandles.GetAllAbilityHandles();
+		return !AbilityHandles.IsEmpty();
+	}
+	return false;
+}
+
+void ULyraQuickBarComponent::ActivateItemAbilityInSlot(int32 SlotIndex)
+{
+	if (ULyraInventoryItemInstance* SlotItem = Slots[SlotIndex])
+	{
+		if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					5.0f, 
+					FColor::Green,
+					FString::Printf(TEXT("Found ASC, attempting to activate"))
+				);
+			}
+			//Activate ability in slot if swapping
+			//Should not swap to slot
+			TArray<FGameplayAbilitySpecHandle> AbilityHandles = SlotItem->GrantedHandles.GetAllAbilityHandles();
+			if (!AbilityHandles.IsEmpty())
+			{
+				ASC->TryActivateAbility(AbilityHandles[0]);
+			}
+		}
+	}
 }
 
 void ULyraQuickBarComponent::EquipItemInSlot()
@@ -111,60 +162,7 @@ void ULyraQuickBarComponent::EquipItemInSlot()
 			}
 		}
 
-		if (const UInventoryFragment_StatItem* StatItemFragment = SlotItem->FindFragmentByClass<UInventoryFragment_StatItem>())
-		{
-			
-			
-			if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-			{
-				if (GEngine)
-				{
-					GEngine->AddOnScreenDebugMessage(
-						-1,
-						5.0f, 
-						FColor::Green,
-						FString::Printf(TEXT("Found ASC, attempting to activate"))
-					);
-				}
-				//Activate ability in slot if swapping
-				//Prevent swapping to slot
-				TArray<FGameplayAbilitySpecHandle> AbilityHandles = SlotItem->GrantedHandles.GetAllAbilityHandles();
-				if (!AbilityHandles.IsEmpty())
-				{
-					ASC->TryActivateAbility(AbilityHandles[0]);
-				}
-				// for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
-				// {
-				// 	AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &Item->GrantedHandles, Item);
-				// }
-			}
-		}
 		
-		// Otherwise, activate the first granted ability
-		// if (UAbilitySystemComponent* AbilitySystem = GetOwner()->FindComponentByClass<UAbilitySystemComponent>())
-		// {
-		// 	if (const UInventoryFragment_AbilitySet* AbilityFragment = SlotItem->FindFragmentByClass<UInventoryFragment_AbilitySet>())
-		// 	{
-		// 		for (const FGameplayAbilitySpecHandle& Handle : AbilityFragment->GrantedAbilityHandles)
-		// 		{
-		// 			if (AbilitySystem->TryActivateAbility(Handle))
-		// 			{
-		// 				// Ability activated successfully
-		// 				return;
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// else if (const UInventoryFragment_StatItem* StatInfo = SlotItem->FindFragmentByClass<UInventoryFragment_StatItem>())
-		// activate granted abilities
-		// {
-		// 	
-		// 	TArray<TObjectPtr<const ULyraAbilitySet>> AbilitySets = StatInfo->AbilitySetsToGrant;
-		// 	if (!AbilitySets.IsEmpty())
-		// 	{
-		// 		
-		// 	}
-		// }
 	}
 }
 
@@ -194,15 +192,22 @@ ULyraEquipmentManagerComponent* ULyraQuickBarComponent::FindEquipmentManager() c
 
 void ULyraQuickBarComponent::SetActiveSlotIndex_Implementation(int32 NewIndex)
 {
-	if (Slots.IsValidIndex(NewIndex) && (ActiveSlotIndex != NewIndex))
+	if (Slots.IsValidIndex(NewIndex))
 	{
-		UnequipItemInSlot();
+		if (IsEquippableItemInSlot(NewIndex) && (ActiveSlotIndex != NewIndex))
+		{
+			UnequipItemInSlot();
 
-		ActiveSlotIndex = NewIndex;
+			ActiveSlotIndex = NewIndex;
 
-		EquipItemInSlot();
+			EquipItemInSlot();
 
-		OnRep_ActiveSlotIndex();
+			OnRep_ActiveSlotIndex();
+		}
+		else if (IsActivatableItemInSlot(NewIndex))
+		{
+			ActivateItemAbilityInSlot(NewIndex);
+		}
 	}
 }
 
@@ -272,8 +277,29 @@ void ULyraQuickBarComponent::RemoveItemFromQuickbar(const ULyraInventoryItemInst
 	}
 }
 
+bool ULyraQuickBarComponent::IsSlottableItem(ULyraInventoryItemInstance* Item)
+{
+	const UInventoryFragment_StatItem* StatItemFragment = Item->FindFragmentByClass<UInventoryFragment_StatItem>();
+	const UInventoryFragment_EquippableItem* EquippableItemFragment = Item->FindFragmentByClass<UInventoryFragment_EquippableItem>();
+	return (StatItemFragment || EquippableItemFragment);
+}
+
 void ULyraQuickBarComponent::AddItemToSlot(int32 SlotIndex, ULyraInventoryItemInstance* Item)
 {
+	if (!IsSlottableItem(Item))
+	{
+		UE_LOG(LogLyra, Warning, TEXT("Attempting to slot a non-slottable item. Item must have statItem or EquippableItem fragment."));
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				5.0f, 
+				FColor::Red,
+				FString::Printf(TEXT("Attempting to slot a non-slottable item. Item must have statItem or EquippableItem fragment."))
+			);
+		}
+		return;
+	}
 	if (Slots.IsValidIndex(SlotIndex) && (Item != nullptr))
 	{
 		// Equipment manager originally prevent replacing slots.
