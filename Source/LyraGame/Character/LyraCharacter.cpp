@@ -185,6 +185,19 @@ ALyraPlayerState* ALyraCharacter::GetLyraPlayerState() const
 	return CastChecked<ALyraPlayerState>(GetPlayerState(), ECastCheckedType::NullAllowed);
 }
 
+TArray<UMeshComponent*> ALyraCharacter::GetMeshComponents() const
+{
+	TArray<UMeshComponent*> Meshes;
+	this->ForEachComponent(true, [&Meshes](UActorComponent* InComponent)
+	{
+		if (UMeshComponent* MeshComponent = Cast<UMeshComponent>(InComponent))
+		{
+			Meshes.Add(MeshComponent);
+		}
+	});
+	return Meshes;
+}
+
 ULyraAbilitySystemComponent* ALyraCharacter::GetLyraAbilitySystemComponent() const
 {
 	return Cast<ULyraAbilitySystemComponent>(GetAbilitySystemComponent());

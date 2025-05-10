@@ -164,18 +164,11 @@ ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(TSubclassOf<ULyraInvent
 	return Result;
 }
 
-void FLyraInventoryList::AddEntry(ULyraInventoryItemInstance* Instance)
+ULyraInventoryItemInstance* FLyraInventoryList::AddEntry(ULyraInventoryItemInstance* Instance)
 {
 	//Push new item definition, or add the instance directly to the Entries?
-
-	//new definition approach
 	TSubclassOf<ULyraInventoryItemDefinition> ItemDef = Instance->GetItemDef();
-	AddEntry(ItemDef, 1);
-	//New instance approach
-	// FLyraInventoryEntry& NewEntry = Entries.AddDefaulted_GetRef();
-	// NewEntry.Instance = Instance;
-
-	//= MarkItemDirty(NewEntry);
+	return AddEntry(ItemDef, 1);
 
 }
 
@@ -267,13 +260,15 @@ ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddItemDefinition(TS
 }
 
 
-void ULyraInventoryManagerComponent::AddItemInstance(ULyraInventoryItemInstance* ItemInstance)
+ULyraInventoryItemInstance* ULyraInventoryManagerComponent::AddItemInstance(ULyraInventoryItemInstance* ItemInstance)
 {
-	InventoryList.AddEntry(ItemInstance);
+	ULyraInventoryItemInstance* Result = nullptr;
+	Result = InventoryList.AddEntry(ItemInstance);
 	if (IsUsingRegisteredSubObjectList() && IsReadyForReplication() && ItemInstance)
 	{
 		AddReplicatedSubObject(ItemInstance);
 	}
+	return Result;
 }
 
 void ULyraInventoryManagerComponent::RemoveItemInstance(ULyraInventoryItemInstance* ItemInstance)

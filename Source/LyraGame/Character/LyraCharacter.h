@@ -110,6 +110,9 @@ public:
 	ALyraPlayerState* GetLyraPlayerState() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Lyra|Character")
+	TArray<UMeshComponent*> GetMeshComponents() const;
+	
+	UFUNCTION(BlueprintCallable, Category = "Lyra|Character")
 	ULyraAbilitySystemComponent* GetLyraAbilitySystemComponent() const;
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

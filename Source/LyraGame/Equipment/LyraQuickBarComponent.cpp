@@ -302,48 +302,34 @@ void ULyraQuickBarComponent::AddItemToSlot(int32 SlotIndex, ULyraInventoryItemIn
 	}
 	if (Slots.IsValidIndex(SlotIndex) && (Item != nullptr))
 	{
-		// Equipment manager originally prevent replacing slots.
-		// New intention is for inventory to contain any items in quickslots
-		// if (Slots[SlotIndex] == nullptr)
-		
-		int32 currentIndex = GetItemCurrentSlotIndex(Item);
-		if (currentIndex > -1)
+		//This gets the index the newly adding item is potentially already slotted at
+		//THis helps prevent dupe slotting of same item
+		int32 CurrentlySlottedIndex = GetItemCurrentSlotIndex(Item);
+		if (CurrentlySlottedIndex > -1)
 		{
-			if (ActiveSlotIndex == currentIndex)
-			{
-				UnequipItemInSlot();
-				ActiveSlotIndex = -1;
-			}
+			//Unassign from the slot
+			RemoveItemFromSlot(CurrentlySlottedIndex);
+		}
 
-			Slots[currentIndex] = nullptr;
-		} else
+		//Add ability sets tied to the new item, ready for activation. Items apply active effects when slotted, and can also be activated to trigger abilities
+		if (const UInventoryFragment_StatItem* StatItemFragment = Item->FindFragmentByClass<UInventoryFragment_StatItem>())
 		{
-			
-			if (const UInventoryFragment_StatItem* StatItemFragment = Item->FindFragmentByClass<UInventoryFragment_StatItem>())
+			if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 			{
-			
-				UE_LOG(LogLyra, Warning, TEXT("Found StatItem fragment in quickbar"));
-				if (GEngine)
+				for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
 				{
-					GEngine->AddOnScreenDebugMessage(
-						-1,
-						5.0f, 
-						FColor::Green,
-						FString::Printf(TEXT("Found StatItem fragment in quickbar"))
-					);
-				}
-				if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
-				{
-					UE_LOG(LogLyra, Warning, TEXT("Found ASC"));
-						
-					for (TObjectPtr<const ULyraAbilitySet> AbilitySet : StatItemFragment->AbilitySetsToGrant)
-					{
-						AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &Item->GrantedHandles, Item);
-					}
+					AbilitySet->GiveToAbilitySystem(ASC, /*inout*/ &Item->GrantedHandles, Item);
 				}
 			}
 		}
+\
+		if (Slots[SlotIndex] != nullptr)
+		{
+			//Remove whatever is currently slotted, appropriately removing abilities/equipped item etc
+			RemoveItemFromSlot(SlotIndex);
+		}
 		Slots[SlotIndex] = Item;
+		
 		OnRep_Slots();
 	}
 }
