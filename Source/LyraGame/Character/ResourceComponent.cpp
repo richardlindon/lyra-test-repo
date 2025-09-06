@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Character/ManaComponent.h"
+#include "Character/ResourceComponent.h"
 #include "LyraLogChannels.h"
 
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/ResourceSet.h"
 
-UManaComponent::UManaComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+UResourceComponent::UResourceComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	PrimaryComponentTick.bCanEverTick = false;
@@ -17,28 +17,28 @@ UManaComponent::UManaComponent(const FObjectInitializer& ObjectInitializer) : Su
 	ResourceSet = nullptr;
 }
 
-void UManaComponent::InitializeWithAbilitySystem(ULyraAbilitySystemComponent* InASC)
+void UResourceComponent::InitializeWithAbilitySystem(ULyraAbilitySystemComponent* InASC)
 {
 	AActor* Owner = GetOwner();
 	check(Owner);
 
 	if (AbilitySystemComponent)
 	{
-		UE_LOG(LogLyra, Error, TEXT("LyraManaComponent: Mana component for owner [%s] has already been initialized with an ability system."), *GetNameSafe(Owner));
+		UE_LOG(LogLyra, Error, TEXT("LyraResourceComponent: Mana component for owner [%s] has already been initialized with an ability system."), *GetNameSafe(Owner));
 		return;
 	}
 
 	AbilitySystemComponent = InASC;
 	if (!AbilitySystemComponent)
 	{
-		UE_LOG(LogLyra, Error, TEXT("LyraManaComponent: Cannot initialize Mana component for owner [%s] with NULL ability system."), *GetNameSafe(Owner));
+		UE_LOG(LogLyra, Error, TEXT("LyraResourceComponent: Cannot initialize Mana component for owner [%s] with NULL ability system."), *GetNameSafe(Owner));
 		return;
 	}
 
 	ResourceSet = AbilitySystemComponent->GetSet<UResourceSet>();
 	if (!ResourceSet)
 	{
-		UE_LOG(LogLyra, Error, TEXT("LyraManaComponent: Cannot initialize Mana component for owner [%s] with NULL Mana set on the ability system."), *GetNameSafe(Owner));
+		UE_LOG(LogLyra, Error, TEXT("LyraResourceComponent: Cannot initialize Mana component for owner [%s] with NULL Mana set on the ability system."), *GetNameSafe(Owner));
 		return;
 	}
 
@@ -47,23 +47,23 @@ void UManaComponent::InitializeWithAbilitySystem(ULyraAbilitySystemComponent* In
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UResourceSet::GetMaxManaAttribute()).AddUObject(this, &ThisClass::HandleMaxManaChanged);
 }
 
-void UManaComponent::UninitializeFromAbilitySystem()
+void UResourceComponent::UninitializeFromAbilitySystem()
 {
 	ResourceSet = nullptr;
 	AbilitySystemComponent = nullptr;
 }
 
-float UManaComponent::GetMana() const
+float UResourceComponent::GetMana() const
 {
 	return (ResourceSet ? ResourceSet->GetMana() : 0.0f);
 }
 
-float UManaComponent::GetMaxMana() const
+float UResourceComponent::GetMaxMana() const
 {
 	return (ResourceSet ? ResourceSet->GetMaxMana() : 0.0f);
 }
 
-float UManaComponent::GetManaNormalized() const
+float UResourceComponent::GetManaNormalized() const
 {
 	if (ResourceSet)
 	{
@@ -76,19 +76,19 @@ float UManaComponent::GetManaNormalized() const
 	return 0.0f;
 }
 
-void UManaComponent::OnUnregister()
+void UResourceComponent::OnUnregister()
 {
 	UninitializeFromAbilitySystem();
 
 	Super::OnUnregister();
 }
 
-void UManaComponent::HandleManaChanged(const FOnAttributeChangeData& ChangeData)
+void UResourceComponent::HandleManaChanged(const FOnAttributeChangeData& ChangeData)
 {
 	OnManaChanged.Broadcast(this, ChangeData.OldValue, ChangeData.NewValue);
 }
 
-void UManaComponent::HandleMaxManaChanged(const FOnAttributeChangeData& ChangeData)
+void UResourceComponent::HandleMaxManaChanged(const FOnAttributeChangeData& ChangeData)
 {
 	OnMaxManaChanged.Broadcast(this, ChangeData.OldValue, ChangeData.NewValue);
 }

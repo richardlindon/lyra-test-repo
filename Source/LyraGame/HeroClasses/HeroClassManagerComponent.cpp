@@ -75,6 +75,8 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 		//Add specific abilities
 		//Determine which ability in a data set array to add to slot 1
 		//Temporary for loop to assign them until we set up ability for player to select ability for slot 
+		
+
 		if (SavedAbilities.IsEmpty())
 		{
 			for (int32 AbilityIndex = 0; AbilityIndex < CurrentHeroClass->ClassAbilities.Num() && AbilityIndex < 2; ++AbilityIndex)
@@ -86,18 +88,27 @@ void UHeroClassManagerComponent::SwapHeroClass(UHeroClassData* NewHeroClass, ULy
 		}
 		else
 		{
-			for (int32 AbilityIndex = 0; AbilityIndex < CurrentHeroClass->ClassAbilities.Num(); ++AbilityIndex)
+			const int32 SlotsToFill = FMath::Min(2, SavedAbilities.Num());
+
+			for (int32 SlotIdx = 0; SlotIdx < SlotsToFill; ++SlotIdx)
 			{
-				const FHeroClassData_GameplayAbility& Ability = CurrentHeroClass->ClassAbilities[AbilityIndex];
-				//Check for assigning to slot 1
-				if (Ability.AbilityTag == SavedAbilities[0])
+				const FGameplayTag Desired = SavedAbilities[SlotIdx];
+
+				const int32 AbilityIdx = CurrentHeroClass->ClassAbilities.IndexOfByPredicate(
+					[&](const FHeroClassData_GameplayAbility& A) { return A.AbilityTag == Desired; });
+
+				if (AbilityIdx != INDEX_NONE)
 				{
-					GrantAbilityToSlot(Ability, ASC,CurrentHeroClass->ClassTag, 0);
+					GrantAbilityToSlot(CurrentHeroClass->ClassAbilities[AbilityIdx], ASC, CurrentHeroClass->ClassTag, SlotIdx);
 				}
-				if (Ability.AbilityTag == SavedAbilities[1])
-				{
-					GrantAbilityToSlot(Ability, ASC,CurrentHeroClass->ClassTag, 1);
-				}
+				// else: saved tag is stale/missing; you might want to fall back to defaults here
+			}
+
+			// Optional: if only one saved entry, clear or default the other slot
+			if (SlotsToFill < 2)
+			{
+				// e.g., assign first available ability that isn't already used
+				// or leave the second slot empty by clearing handles.
 			}
 		}
 		

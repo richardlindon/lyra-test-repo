@@ -17,7 +17,7 @@
 #include "Player/LyraPlayerState.h"
 #include "System/LyraSignificanceManager.h"
 #include "TimerManager.h"
-#include "ManaComponent.h"
+#include "ResourceComponent.h"
 #include "MovementSetComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraCharacter)
@@ -72,7 +72,7 @@ ALyraCharacter::ALyraCharacter(const FObjectInitializer& ObjectInitializer)
 	HealthComponent->OnDeathStarted.AddDynamic(this, &ThisClass::OnDeathStarted);
 	HealthComponent->OnDeathFinished.AddDynamic(this, &ThisClass::OnDeathFinished);
 
-	ManaComponent = CreateDefaultSubobject<UManaComponent>(TEXT("ManaComponent"));
+	ResourceComponent = CreateDefaultSubobject<UResourceComponent>(TEXT("ResourceComponent"));
 	MovementSetComponent = CreateDefaultSubobject<UMovementSetComponent>(TEXT("MovementSetComponent"));
 
 	CameraComponent = CreateDefaultSubobject<ULyraCameraComponent>(TEXT("CameraComponent"));
@@ -219,7 +219,7 @@ void ALyraCharacter::OnAbilitySystemInitialized()
 	check(LyraASC);
 
 	HealthComponent->InitializeWithAbilitySystem(LyraASC);
-	ManaComponent->InitializeWithAbilitySystem(LyraASC);
+	ResourceComponent->InitializeWithAbilitySystem(LyraASC);
 	MovementSetComponent->InitializeWithAbilitySystem(LyraASC);
 
 	InitializeGameplayTags();
@@ -228,7 +228,7 @@ void ALyraCharacter::OnAbilitySystemInitialized()
 void ALyraCharacter::OnAbilitySystemUninitialized()
 {
 	HealthComponent->UninitializeFromAbilitySystem();
-	ManaComponent->UninitializeFromAbilitySystem();
+	ResourceComponent->UninitializeFromAbilitySystem();
 	MovementSetComponent->UninitializeFromAbilitySystem();
 
 }

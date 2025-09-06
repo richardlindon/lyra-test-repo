@@ -14,16 +14,16 @@
  * 
  */
 UCLASS(BlueprintType)
-class UManaSet : public ULyraAttributeSet
+class UResourceSet : public ULyraAttributeSet
 {
 	GENERATED_BODY()
 	
-	UManaSet();
+	UResourceSet();
 
 public:
 
-	ATTRIBUTE_ACCESSORS(UManaSet, Mana);
-	ATTRIBUTE_ACCESSORS(UManaSet, MaxMana);
+	ATTRIBUTE_ACCESSORS(UResourceSet, Mana);
+	ATTRIBUTE_ACCESSORS(UResourceSet, MaxMana);
 
 protected:
 

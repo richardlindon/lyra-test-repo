@@ -16,7 +16,7 @@
 #include "GameModes/LyraGameMode.h"
 #include "LyraLogChannels.h"
 #include "LyraPlayerController.h"
-#include "AbilitySystem/Attributes/ManaSet.h"
+#include "AbilitySystem/Attributes/ResourceSet.h"
 #include "AbilitySystem/Attributes/MovementSet.h"
 #include "Messages/LyraVerbMessage.h"
 #include "Net/UnrealNetwork.h"
@@ -42,7 +42,7 @@ ALyraPlayerState::ALyraPlayerState(const FObjectInitializer& ObjectInitializer)
 	
 	// These attribute sets will be detected by AbilitySystemComponent::InitializeComponent. Keeping a reference so that the sets don't get garbage collected before that.
 	HealthSet = CreateDefaultSubobject<ULyraHealthSet>(TEXT("HealthSet"));
-	ManaSet = CreateDefaultSubobject<UManaSet>(TEXT("ManaSet"));
+	ResourceSet = CreateDefaultSubobject<UResourceSet>(TEXT("ResourceSet"));
 	MovementSet = CreateDefaultSubobject<UMovementSet>(TEXT("MovementSet"));
 	CombatSet = CreateDefaultSubobject<ULyraCombatSet>(TEXT("CombatSet"));
 

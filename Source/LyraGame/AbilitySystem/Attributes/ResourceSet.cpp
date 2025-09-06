@@ -9,36 +9,36 @@
 #include "AbilitySystem/Attributes/LyraAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(ManaSet)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ResourceSet)
 
 
-UManaSet::UManaSet()
+UResourceSet::UResourceSet()
 	: Mana(100.0f)
 	, MaxMana(100.0f)
 {
 }
 
-void UManaSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void UResourceSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(UManaSet, Mana, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UManaSet, MaxMana, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UResourceSet, Mana, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UResourceSet, MaxMana, COND_None, REPNOTIFY_Always);
 }
 
 
-void UManaSet::OnRep_Mana(const FGameplayAttributeData& OldValue)
+void UResourceSet::OnRep_Mana(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UManaSet, Mana, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UResourceSet, Mana, OldValue);
 }
 
-void UManaSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue)
+void UResourceSet::OnRep_MaxMana(const FGameplayAttributeData& OldValue)
 {
-	GAMEPLAYATTRIBUTE_REPNOTIFY(UManaSet, MaxMana, OldValue);
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UResourceSet, MaxMana, OldValue);
 }
 
 
-bool UManaSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
+bool UResourceSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
 {
 	if (!Super::PreGameplayEffectExecute(Data))
 	{
@@ -64,21 +64,21 @@ bool UManaSet::PreGameplayEffectExecute(FGameplayEffectModCallbackData& Data)
 	return true;
 }
 
-void UManaSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
+void UResourceSet::PreAttributeBaseChange(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	Super::PreAttributeBaseChange(Attribute, NewValue);
 
 	ClampAttribute(Attribute, NewValue);
 }
 
-void UManaSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
+void UResourceSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
 	Super::PreAttributeChange(Attribute, NewValue);
 
 	ClampAttribute(Attribute, NewValue);
 }
 
-void UManaSet::ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const
+void UResourceSet::ClampAttribute(const FGameplayAttribute& Attribute, float& NewValue) const
 {
 	if (Attribute == GetManaAttribute())
 	{

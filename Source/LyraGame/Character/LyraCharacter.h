@@ -21,7 +21,7 @@ class UInputComponent;
 class ULyraAbilitySystemComponent;
 class ULyraCameraComponent;
 class ULyraHealthComponent;
-class UManaComponent;
+class UResourceComponent;
 class UMovementSetComponent;
 class ULyraPawnExtensionComponent;
 class UObject;
@@ -204,7 +204,7 @@ private:
 	TObjectPtr<ULyraHealthComponent> HealthComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UManaComponent> ManaComponent;
+	TObjectPtr<UResourceComponent> ResourceComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Lyra|Character", Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<ULyraCameraComponent> CameraComponent;

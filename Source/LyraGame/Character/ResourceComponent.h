@@ -4,11 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Components/GameFrameworkComponent.h"
-#include "ManaComponent.generated.h"
+#include "ResourceComponent.generated.h"
 
 struct FOnAttributeChangeData;
 class UResourceSet;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMana_AttributeChanged, UManaComponent*, ManaComponent, float,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMana_AttributeChanged, UResourceComponent*, ResourceComponent, float,
 	OldValue, float, NewValue);
 
 class ULyraAbilitySystemComponent;
@@ -16,16 +16,16 @@ class ULyraAbilitySystemComponent;
  *
  */
 UCLASS()
-class LYRAGAME_API UManaComponent : public UGameFrameworkComponent
+class LYRAGAME_API UResourceComponent : public UGameFrameworkComponent
 {
 	GENERATED_BODY()
 
 public:
-	UManaComponent(const FObjectInitializer& ObjectInitializer);
+	UResourceComponent(const FObjectInitializer& ObjectInitializer);
 
 	// Returns the Mana component if one exists on the specified actor.
 	UFUNCTION(BlueprintPure, Category = "Lyra|Mana")
-	static UManaComponent* FindManaComponent(const AActor* Actor) { return (Actor ? Actor->FindComponentByClass<UManaComponent>() : nullptr); }
+	static UResourceComponent* FindResourceComponent(const AActor* Actor) { return (Actor ? Actor->FindComponentByClass<UResourceComponent>() : nullptr); }
 
 	// Initialize the component using an ability system component.
 	UFUNCTION(BlueprintCallable, Category = "Lyra|Mana")
