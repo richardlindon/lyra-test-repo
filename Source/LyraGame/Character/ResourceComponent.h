@@ -7,7 +7,7 @@
 #include "ManaComponent.generated.h"
 
 struct FOnAttributeChangeData;
-class UManaSet;
+class UResourceSet;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FMana_AttributeChanged, UManaComponent*, ManaComponent, float,
 	OldValue, float, NewValue);
 
@@ -70,5 +70,5 @@ protected:
 
 	// Mana set used by this component.
 	UPROPERTY()
-	const UManaSet* ManaSet;
+	const UResourceSet* ResourceSet;
 };

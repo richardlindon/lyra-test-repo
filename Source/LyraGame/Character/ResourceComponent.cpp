@@ -4,7 +4,7 @@
 #include "LyraLogChannels.h"
 
 #include "AbilitySystem/LyraAbilitySystemComponent.h"
-#include "AbilitySystem/Attributes/ManaSet.h"
+#include "AbilitySystem/Attributes/ResourceSet.h"
 
 UManaComponent::UManaComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -14,7 +14,7 @@ UManaComponent::UManaComponent(const FObjectInitializer& ObjectInitializer) : Su
 	SetIsReplicatedByDefault(true);
 
 	AbilitySystemComponent = nullptr;
-	ManaSet = nullptr;
+	ResourceSet = nullptr;
 }
 
 void UManaComponent::InitializeWithAbilitySystem(ULyraAbilitySystemComponent* InASC)
@@ -35,40 +35,40 @@ void UManaComponent::InitializeWithAbilitySystem(ULyraAbilitySystemComponent* In
 		return;
 	}
 
-	ManaSet = AbilitySystemComponent->GetSet<UManaSet>();
-	if (!ManaSet)
+	ResourceSet = AbilitySystemComponent->GetSet<UResourceSet>();
+	if (!ResourceSet)
 	{
 		UE_LOG(LogLyra, Error, TEXT("LyraManaComponent: Cannot initialize Mana component for owner [%s] with NULL Mana set on the ability system."), *GetNameSafe(Owner));
 		return;
 	}
 
 	// Register to listen for attribute changes.
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UManaSet::GetManaAttribute()).AddUObject(this, &ThisClass::HandleManaChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UManaSet::GetMaxManaAttribute()).AddUObject(this, &ThisClass::HandleMaxManaChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UResourceSet::GetManaAttribute()).AddUObject(this, &ThisClass::HandleManaChanged);
+	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(UResourceSet::GetMaxManaAttribute()).AddUObject(this, &ThisClass::HandleMaxManaChanged);
 }
 
 void UManaComponent::UninitializeFromAbilitySystem()
 {
-	ManaSet = nullptr;
+	ResourceSet = nullptr;
 	AbilitySystemComponent = nullptr;
 }
 
 float UManaComponent::GetMana() const
 {
-	return (ManaSet ? ManaSet->GetMana() : 0.0f);
+	return (ResourceSet ? ResourceSet->GetMana() : 0.0f);
 }
 
 float UManaComponent::GetMaxMana() const
 {
-	return (ManaSet ? ManaSet->GetMaxMana() : 0.0f);
+	return (ResourceSet ? ResourceSet->GetMaxMana() : 0.0f);
 }
 
 float UManaComponent::GetManaNormalized() const
 {
-	if (ManaSet)
+	if (ResourceSet)
 	{
-		const float Mana = ManaSet->GetMana();
-		const float MaxMana = ManaSet->GetMaxMana();
+		const float Mana = ResourceSet->GetMana();
+		const float MaxMana = ResourceSet->GetMaxMana();
 
 		return ((MaxMana > 0.0f) ? (Mana / MaxMana) : 0.0f);
 	}

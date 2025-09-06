@@ -7,7 +7,7 @@
 #include "LyraAttributeSet.h"
 #include "NativeGameplayTags.h"
 
-#include "ManaSet.generated.h"
+#include "ResourceSet.generated.h"
 
 
 /**
