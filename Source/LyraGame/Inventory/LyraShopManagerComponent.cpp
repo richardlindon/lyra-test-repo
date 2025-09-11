@@ -2,12 +2,16 @@
 
 #include "LyraShopManagerComponent.h"
 
+#include "AbilitySystemGlobals.h"
+#include "LyraGameplayTags.h"
 #include "Engine/ActorChannel.h"
 #include "Engine/World.h"
 #include "GameFramework/GameplayMessageSubsystem.h"
 #include "LyraInventoryItemDefinition.h"
 #include "LyraInventoryItemInstance.h"
 #include "NativeGameplayTags.h"
+#include "AbilitySystem/LyraAbilitySystemComponent.h"
+#include "Character/LyraCharacter.h"
 #include "Net/UnrealNetwork.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraShopManagerComponent)
@@ -16,6 +20,8 @@ class FLifetimeProperty;
 struct FReplicationFlags;
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Inventory_Shop_Message_StackChanged, "Lyra.Inventory.Message.ShopStackChanged");
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Lyra_Inventory_Can_Shop, "Lyra.Inventory.CanShop");
+
 
 //////////////////////////////////////////////////////////////////////
 // FLyraShopEntry
@@ -263,6 +269,38 @@ bool ULyraShopManagerComponent::ConsumeItemsByDefinition(TSubclassOf<ULyraInvent
 	}
 
 	return TotalConsumed == NumToConsume;
+}
+
+ULyraAbilitySystemComponent* ULyraShopManagerComponent::GetAbilitySystemComponent() const
+{
+	AActor* OwningActor = GetOwner();
+	if (ULyraAbilitySystemComponent* ASC = Cast<ULyraAbilitySystemComponent>(UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OwningActor)))
+	{
+		return ASC;
+	}
+		
+	// Attempt to cast the OwningActor to AController (or its derived class)
+	if (AController* Controller = Cast<AController>(OwningActor))
+	{
+		if (APawn* Pawn = Controller->GetPawn())
+		{
+			if (ALyraCharacter* Character = Cast<ALyraCharacter>(Pawn))
+			{
+				return Character->GetLyraAbilitySystemComponent();
+			}
+		}
+	}
+	
+	return nullptr;
+}
+
+bool ULyraShopManagerComponent::OwnerCanBuy() const
+{
+	if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
+	{
+		return ASC->HasMatchingGameplayTag(TAG_Lyra_Inventory_Can_Shop);
+	}
+	return false;
 }
 
 void ULyraShopManagerComponent::ReadyForReplication()

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "AbilitySystem/LyraAbilitySystemComponent.h"
 #include "Components/ActorComponent.h"
 #include "Net/Serialization/FastArraySerializer.h"
 
@@ -120,12 +121,6 @@ struct TStructOpsTypeTraits<FLyraShopList> : public TStructOpsTypeTraitsBase2<FL
 
 
 
-
-
-
-
-
-
 /**
  * Manages an inventory
  */
@@ -157,7 +152,10 @@ public:
 
 	int32 GetTotalItemCountByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef) const;
 	bool ConsumeItemsByDefinition(TSubclassOf<ULyraInventoryItemDefinition> ItemDef, int32 NumToConsume);
-	
+	ULyraAbilitySystemComponent* GetAbilitySystemComponent() const;
+
+	UFUNCTION(BlueprintPure)
+	bool OwnerCanBuy() const;
 	
 	//~UObject interface
 	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
