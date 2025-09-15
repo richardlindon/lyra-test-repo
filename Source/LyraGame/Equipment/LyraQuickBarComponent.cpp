@@ -119,15 +119,15 @@ void ULyraQuickBarComponent::ActivateItemAbilityInSlot(int32 SlotIndex)
 	{
 		if (ULyraAbilitySystemComponent* ASC = GetAbilitySystemComponent())
 		{
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(
-					-1,
-					5.0f, 
-					FColor::Green,
-					FString::Printf(TEXT("Found ASC, attempting to activate"))
-				);
-			}
+			// if (GEngine)
+			// {
+			// 	GEngine->AddOnScreenDebugMessage(
+			// 		-1,
+			// 		5.0f, 
+			// 		FColor::Green,
+			// 		FString::Printf(TEXT("Found ASC, attempting to activate"))
+			// 	);
+			// }
 			//Activate ability in slot if swapping
 			//Should not swap to slot
 			TArray<FGameplayAbilitySpecHandle> AbilityHandles = SlotItem->GrantedHandles.GetAllAbilityHandles();

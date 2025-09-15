@@ -41,6 +41,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Costs)
 	FGameplayTag Tag;
 
+	/** Should item be removed when the tag stack is consumed? */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Costs)
+	bool RemoveItemOnEmptyTag;
+	
+	
 	/** Which tag to send back as a response if this cost cannot be applied */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Costs)
 	FGameplayTag FailureTag;

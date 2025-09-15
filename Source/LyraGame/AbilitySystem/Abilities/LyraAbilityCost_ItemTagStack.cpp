@@ -5,6 +5,8 @@
 #include "Equipment/LyraGameplayAbility_FromEquipment.h"
 #include "Inventory/LyraInventoryItemInstance.h"
 #include "NativeGameplayTags.h"
+#include "Equipment/LyraQuickBarComponent.h"
+#include "Inventory/LyraInventoryManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraAbilityCost_ItemTagStack)
 
@@ -14,6 +16,7 @@ ULyraAbilityCost_ItemTagStack::ULyraAbilityCost_ItemTagStack()
 {
 	Quantity.SetValue(1.0f);
 	FailureTag = TAG_ABILITY_FAIL_COST;
+	RemoveItemOnEmptyTag = false;
 }
 
 bool ULyraAbilityCost_ItemTagStack::CheckCost(const ULyraGameplayAbility* Ability, const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
@@ -53,6 +56,25 @@ void ULyraAbilityCost_ItemTagStack::ApplyCost(const ULyraGameplayAbility* Abilit
 				const int32 NumStacks = FMath::TruncToInt(NumStacksReal);
 
 				ItemInstance->RemoveStatTagStack(Tag, NumStacks);
+
+				if (RemoveItemOnEmptyTag)
+				{
+					if (ItemInstance->GetStatTagStackCount(Tag) <= 0)
+					{
+						if (AController* PC = Ability->GetControllerFromActorInfo())
+						{
+							if (ULyraQuickBarComponent* QuickbarComponent = PC->GetComponentByClass<ULyraQuickBarComponent>())
+							{
+								QuickbarComponent->RemoveItemFromQuickbar(ItemInstance);
+							}
+							if (ULyraInventoryManagerComponent* InventoryComponent = PC->GetComponentByClass<ULyraInventoryManagerComponent>())
+							{
+								InventoryComponent->RemoveItemInstance(ItemInstance);
+							}
+							
+						}
+					}
+				}
 			}
 		}
 	}
