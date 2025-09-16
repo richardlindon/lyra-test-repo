@@ -61,18 +61,8 @@ void ULyraAbilityCost_ItemTagStack::ApplyCost(const ULyraGameplayAbility* Abilit
 				{
 					if (ItemInstance->GetStatTagStackCount(Tag) <= 0)
 					{
-						if (AController* PC = Ability->GetControllerFromActorInfo())
-						{
-							if (ULyraQuickBarComponent* QuickbarComponent = PC->GetComponentByClass<ULyraQuickBarComponent>())
-							{
-								QuickbarComponent->RemoveItemFromQuickbar(ItemInstance);
-							}
-							if (ULyraInventoryManagerComponent* InventoryComponent = PC->GetComponentByClass<ULyraInventoryManagerComponent>())
-							{
-								InventoryComponent->RemoveItemInstance(ItemInstance);
-							}
-							
-						}
+						static const FGameplayTag TAG_LYRA_INVENTORY_PENDINGREMOVE = FGameplayTag::RequestGameplayTag(TEXT("Lyra.Inventory.PendingRemove"));
+						ItemInstance->AddStatTagStack(TAG_LYRA_INVENTORY_PENDINGREMOVE, 1);
 					}
 				}
 			}

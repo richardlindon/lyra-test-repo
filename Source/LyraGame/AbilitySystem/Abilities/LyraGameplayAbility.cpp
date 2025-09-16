@@ -18,6 +18,9 @@
 #include "Physics/PhysicalMaterialWithTags.h"
 #include "GameFramework/PlayerState.h"
 #include "Camera/LyraCameraMode.h"
+#include "Equipment/LyraGameplayAbility_FromEquipment.h"
+#include "Equipment/LyraQuickBarComponent.h"
+#include "Inventory/LyraInventoryManagerComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraGameplayAbility)
 
@@ -196,6 +199,32 @@ void ULyraGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, c
 	ClearCameraMode();
 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	if (const ULyraGameplayAbility_FromEquipment* EquipmentAbility = Cast<ULyraGameplayAbility_FromEquipment>(this))
+	{
+		if (ULyraInventoryItemInstance* ItemInstance = EquipmentAbility->GetAssociatedItem())
+		{
+			static const FGameplayTag TAG_LYRA_INVENTORY_PENDINGREMOVE = FGameplayTag::RequestGameplayTag(TEXT("Lyra.Inventory.PendingRemove"));
+
+			if (ItemInstance->GetStatTagStackCount(TAG_LYRA_INVENTORY_PENDINGREMOVE) > 0)
+			{
+				if (const AController* PC = GetControllerFromActorInfo())
+				{
+					if (ULyraQuickBarComponent* QuickbarComponent = PC->GetComponentByClass<ULyraQuickBarComponent>())
+					{
+						QuickbarComponent->RemoveItemFromQuickbar(ItemInstance);
+					}
+					if (ULyraInventoryManagerComponent* InventoryComponent = PC->GetComponentByClass<ULyraInventoryManagerComponent>())
+					{
+						InventoryComponent->RemoveItemInstance(ItemInstance);
+					}
+				}
+			}
+		}
+	}
+
+						
+	
 }
 
 bool ULyraGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags) const

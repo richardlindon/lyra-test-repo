@@ -121,6 +121,12 @@ public:
 	virtual bool HasAllMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 	virtual bool HasAnyMatchingGameplayTags(const FGameplayTagContainer& TagContainer) const override;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Lyra|Character")
+	FVector LastTeleportLocation;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Lyra|Character")
+	FVector LastTeleportOrientation;
+	
 	void ToggleCrouch();
 
 	//~AActor interface
